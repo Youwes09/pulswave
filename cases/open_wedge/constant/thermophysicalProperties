@@ -1,0 +1,59 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties;
+}
+
+// CORRECTED from the earlier draft. That version guessed
+// "reactingMixture" + "chemkinReader" (reading Chemkin files directly
+// at runtime). The real workflow, confirmed against detonationFoam's
+// own createFields.H (stock psiReactionThermo::New) and a working
+// OpenFOAM-8 reference case (tutorials/lagrangian/sprayFoam/aachenBomb,
+// itself an n-heptane spray combustion case) is different: Chemkin
+// files get pre-converted ONCE via chemkinToFoam into OpenFOAM's native
+// constant/reactions + constant/speciesThermo, and thermophysicalProperties
+// #includes those. mixture is "multiComponentMixture", not
+// "reactingMixture".
+
+thermoType
+{
+    type            hePsiThermo;
+    mixture         multiComponentMixture;
+    transport       sutherland;
+    thermo          janaf;
+    energy          sensibleEnthalpy;
+    equationOfState perfectGas;
+    specie          specie;
+}
+
+#include "speciesThermo"
+
+newFormat       yes;
+inertSpecie     N2;
+
+// Both liquids present across the paper's cases (reactive C7H16 jet,
+// non-reactive H2O jet). Entry name must match the carrier gas-phase
+// species name from the real 44/112 mechanism (fuel is NXC7H16 there,
+// not C7H16 -- n-/primary-/secondary- isomer naming convention).
+// "type C7H16;" pulls OpenFOAM's real registered n-heptane property
+// class (src/thermophysicalModels/thermophysicalProperties/
+// liquidProperties/C7H16) -- per liquidProperties::New(dict), when
+// "type" is given explicitly the entry's own name no longer has to
+// match a registered class, so NXC7H16 as the key + type C7H16 pulls
+// real n-heptane data under the mechanism-correct name. H2O needs no
+// such override since it already matches both its mechanism species
+// name and its liquid-database name.
+liquids
+{
+    NXC7H16
+    {
+        type C7H16;
+    }
+    H2O;
+}
+
+solids
+{}

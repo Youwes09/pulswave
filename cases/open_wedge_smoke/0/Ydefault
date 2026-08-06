@@ -1,0 +1,24 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      Ydefault;
+}
+
+// Required by multiComponentMixture -- species without their own 0/
+// file inherit this. We give all 5 species (C7H16/O2/N2/CO2/H2O) their
+// own files below, so this mainly exists because hePsiThermo demands
+// it be present at all, not because anything actually falls back to it.
+dimensions          [0 0 0 0 0 0 0];
+internalField       uniform 0;
+
+boundaryField
+{
+    inflow       { type zeroGradient; }
+    outflow      { type zeroGradient; }
+    upperBoundary{ type zeroGradient; }
+    lowerWall    { type zeroGradient; }
+    jet          { type zeroGradient; }
+    frontAndBack { type empty; }
+}

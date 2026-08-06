@@ -1,0 +1,174 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      sprayCloudProperties;
+}
+
+// Identical submodel choices to cases/open_wedge/constant/sprayCloudProperties
+// (see that file's comments for the paper citations behind each choice --
+// nothing about the physics models changes here, only the injection
+// geometry/rate numbers below, because the smoke-test patch is wider).
+
+solution
+{
+    active          true;
+    coupled         true;
+    transient       yes;
+    cellValueSourceCorrection on;
+    maxCo           0.3;
+
+    sourceTerms
+    {
+        schemes
+        {
+            rho             explicit 1;
+            U               explicit 1;
+            Yi              explicit 1;
+            h               explicit 1;
+        }
+    }
+
+    interpolationSchemes
+    {
+        rho             cell;
+        U               cellPoint;
+        thermo:mu       cell;
+        T               cell;
+        Cp              cell;
+        kappa           cell;
+        p               cell;
+    }
+
+    integrationSchemes
+    {
+        U               Euler;
+        T               analytical;
+    }
+}
+
+constantProperties
+{
+    T0              300;
+    rho0            680;
+    Cp0             2240;
+    constantVolume  false;
+}
+
+subModels
+{
+    particleForces
+    {
+        sphereDrag;
+    }
+
+    injectionModels
+    {
+        model1
+        {
+            type            patchInjection;
+            patchName       jet;
+
+            // Fuel is live for the whole smoke test -- duration matches
+            // controlDict endTime so parcels appear throughout, not just
+            // at t=0.
+            SOI             0;
+            duration        2e-6;
+
+            U0              (0 60.83 0);
+
+            // massTotal recomputed for the smoke-test geometry, NOT
+            // scaled from the real case's diagnostic-cut value:
+            //   patch area  = 1 face x 1mm x 2mm depth = 2e-6 m^2
+            //                 (vs. the real case's 8e-7 m^2 -- this
+            //                 patch is unavoidably 2.5x wider at 1mm
+            //                 resolution, see topoSetDict note)
+            //   massTotal   = rho_liquid * u_jet * area * duration
+            //               = 680 * 60.83 * 2e-6 * 2e-6
+            //               = 1.655e-7 kg
+            massTotal       1.655e-7;
+            parcelBasisType mass;
+
+            // Using the paper's real mid-range rate (7.5e4 parcels /
+            // 1e-3 s = 7.5e7 /s), NOT the 10x diagnostic cut from the
+            // real case -- the point of this run is to actually see
+            // parcels behave normally. At this rate, ~7.5e7 x 2e-6 =
+            // 150 parcels total are expected over the smoke-test
+            // duration if injection runs the full window.
+            parcelsPerSecond 7.5e7;
+
+            flowRateProfile constant 1;
+
+            sizeDistribution
+            {
+                type            RosinRammler;
+
+                RosinRammlerDistribution
+                {
+                    minValue        1e-6;
+                    maxValue        3e-5;
+                    d               1e-5;
+                    n               3;
+                }
+            }
+        }
+    }
+
+    dispersionModel none;
+
+    patchInteractionModel standardWallInteraction;
+
+    heatTransferModel RanzMarshall;
+
+    compositionModel singlePhaseMixture;
+
+    phaseChangeModel liquidEvaporation;
+
+    surfaceFilmModel none;
+
+    atomizationModel none;
+
+    breakupModel    PilchErdman;
+
+    stochasticCollisionModel none;
+
+    radiation       off;
+
+    standardWallInteractionCoeffs
+    {
+        type            rebound;
+    }
+
+    RanzMarshallCoeffs
+    {
+        BirdCorrection  true;
+    }
+
+    singlePhaseMixtureCoeffs
+    {
+        phases
+        (
+            liquid
+            {
+                NXC7H16         1;
+            }
+        );
+    }
+
+    liquidEvaporationCoeffs
+    {
+        enthalpyTransfer enthalpyDifference;
+        activeLiquids    ( NXC7H16 );
+    }
+
+    PilchErdmanCoeffs
+    {
+        B1              0.375;
+        B2              0.2274;
+    }
+}
+
+cloudFunctions
+{}

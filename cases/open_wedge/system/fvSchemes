@@ -1,0 +1,75 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+
+// Per paper Sec 2.2: first-order Euler (time), Gauss-limited-linear
+// (spatial derivatives), KNP central-upwind scheme for fluxes.
+// NOTE: divSchemes entries below are a generic rhoCentralFoam-family
+// guess (density, momentum, energy, species). detonationFoam-dev may
+// use different field names for its flux terms -- diff this against
+// an actual tutorial case in the .sif once you have shell access, do
+// not trust this blindly.
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    // Checked against actual solve equations in
+    // solverTypeNSSpray_Sutherland/{rhoEqn,rhoUEqn,rhoEEqn}_NSSpray_Sutherland.H:
+    // every div() call there is fvc::div(singleFluxField) -- rhoPhi,
+    // rhoUPhi, rhoEPhi, sigmaDotU, tauMC -- so all of those fall
+    // through to "default". Gauss linear is appropriate since the
+    // actual shock-capturing reconstruction already happens via the
+    // KNP/Kurganov fluxScheme (see interpolationSchemes below) -- this
+    // divSchemes block is only for already-computed face fluxes.
+    default         Gauss linear;
+
+    // rhoYEqn_NSSpray_Sutherland.H DOES use the bracketed form, unlike
+    // the others above: species mass fractions + enthalpy are grouped
+    // into a multivariate field table via
+    // mesh.divScheme("div(rhoPhi,Yi_h)") (confirmed by grepping the
+    // actual .H source, not guessed -- key is rhoPhi, not phi, matching
+    // this solver's flux naming convention). Multivariate interpolation
+    // is restricted to boundedness-preserving schemes only; plain
+    // linear is rejected regardless of the Gauss wrapper.
+    div(rhoPhi,Yi_h)    Gauss limitedLinear01 1;
+}
+
+interpolationSchemes
+{
+    default             linear;
+    reconstruct(rho)    limitedLinear 1;
+    reconstruct(U)      limitedLinear 1;
+    reconstruct(T)      limitedLinear 1;
+    reconstruct(rhoU)   limitedLinear 1;
+    reconstruct(rPsi)   limitedLinear 1;
+    reconstruct(c)      limitedLinear 1;
+    reconstruct(e)      limitedLinear 1;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxScheme      Kurganov;   // KNP scheme; confirm exact keyword against
+                            // detonationFoam-dev source -- rhoCentralFoam
+                            // itself uses "fluxScheme Kurganov;" in
+                            // fvSchemes, assuming this fork kept that.

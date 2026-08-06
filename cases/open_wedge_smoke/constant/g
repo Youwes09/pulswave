@@ -1,0 +1,16 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       uniformDimensionedVectorField;
+    location    "constant";
+    object      g;
+}
+
+// Required because basicSprayCloud's constructor takes g directly
+// (see solverTypeNSSpray_Sutherland.H: readGravitationalAcceleration.H).
+// Physically irrelevant here -- droplet Reynolds/Weber numbers at
+// u ~ 2500 m/s dwarf any gravitational term -- but the field must exist
+// or the case won't read.
+dimensions      [0 1 -2 0 0 0 0];
+value           (0 -9.81 0);

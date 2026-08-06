@@ -1,0 +1,80 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+
+// Geometry per docs/case-spec.md (Fig. 1b, Wang/Hu/Zhang 2026).
+// Ramp angle 25 deg, wall (ramp) length 300 mm, inlet height 132 mm,
+// upstream flat section 110 mm. Upper boundary assumed parallel to the
+// ramp (constant channel height) downstream of the ramp start -- Fig. 1b
+// does not give enough detail to fix the cowl/upper-wall shape exactly.
+// This is an assumption, not a transcribed value; verify against the
+// actual authors' mesh before trusting quantitative results.
+
+convertToMeters 1;
+
+scale     0.001; // all coordinates below in mm
+rampAngle 25;    // deg
+
+vertices
+(
+    (-110   0    -1)  // 0
+    (   0   0    -1)  // 1
+    ( 271.9 126.8 -1)  // 2  (0,0) + 300*cos25, 300*sin25
+    (-110 132    -1)  // 3
+    (   0 132    -1)  // 4
+    ( 271.9 258.8 -1)  // 5  vertex2 + 132 normal-ish offset (see note)
+
+    (-110   0     1)  // 6
+    (   0   0     1)  // 7
+    ( 271.9 126.8  1)  // 8
+    (-110 132     1)  // 9
+    (   0 132     1)  // 10
+    ( 271.9 258.8  1)  // 11
+);
+
+blocks
+(
+    hex (0 1 4 3 6 7 10 9)   (367 440 1) simpleGrading (1 1 1)   // upstream, 110mm / 0.3mm
+    hex (1 2 5 4 7 8 11 10)  (906 440 1) simpleGrading (1 1 1)   // ramp/combustor, 271.9mm / 0.3mm
+);
+
+edges
+(
+);
+
+boundary
+(
+    inflow
+    {
+        type patch;
+        faces ((0 3 9 6));
+    }
+    outflow
+    {
+        type patch;
+        faces ((2 5 11 8));
+    }
+    lowerWall
+    {
+        type wall;
+        faces ((0 1 7 6) (1 2 8 7));
+    }
+    upperWall
+    {
+        type wall;
+        faces ((3 4 10 9) (4 5 11 10));
+    }
+    frontAndBack
+    {
+        type empty;
+        faces ((0 3 4 1) (6 9 10 7) (1 4 5 2) (7 10 11 8));
+    }
+);
+
+mergePatchPairs
+(
+);

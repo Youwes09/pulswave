@@ -1,0 +1,39 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%environment
+    export HOME=/opt
+    unset LOGNAME
+    unset USER
+    export DEBIAN_FRONTEND=noninteractive
+    source /opt/OpenFOAM/OpenFOAM-8/etc/bashrc
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        wget curl git build-essential cmake flex bison libfl-dev zlib1g-dev \
+        libboost-system-dev libboost-thread-dev libopenmpi-dev openmpi-bin \
+        libscotch-dev libptscotch-dev libreadline-dev ca-certificates \
+        python3 python3-pip
+
+    mkdir -p /opt/OpenFOAM
+    cd /opt/OpenFOAM
+    git clone --depth 1 --branch master https://github.com/OpenFOAM/OpenFOAM-8.git OpenFOAM-8
+    git clone --depth 1 --branch master https://github.com/OpenFOAM/ThirdParty-8.git ThirdParty-8
+
+    export HOME=/opt
+    unset LOGNAME
+    unset USER
+    bash -c "export HOME=/opt && unset LOGNAME && unset USER && \
+        source /opt/OpenFOAM/OpenFOAM-8/etc/bashrc && \
+        cd /opt/OpenFOAM/OpenFOAM-8 && ./Allwmake -j"
+
+    pip3 install --no-cache-dir numpy scipy matplotlib pandas fluidfoam
+
+%runscript
+    export HOME=/opt
+    unset LOGNAME
+    unset USER
+    source /opt/OpenFOAM/OpenFOAM-8/etc/bashrc
+    exec "$@"

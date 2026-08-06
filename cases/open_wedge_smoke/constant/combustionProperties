@@ -1,0 +1,25 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      combustionProperties;
+}
+
+// "laminar" here is an OpenFOAM CombustionModel choice (direct
+// finite-rate chemistry integration, no turbulent-mixing correction
+// term) -- NOT a statement about the flow being laminar in the fluid-
+// dynamics sense (it's hypersonic and almost certainly turbulent in
+// reality). It's the consistent pairing with momentumTransport's
+// simulationType laminar: since there's no RAS model supplying a
+// turbulent timescale, a model like PaSR (which needs one) doesn't
+// apply. The paper doesn't discuss turbulence-chemistry interaction at
+// all, which is consistent with this being the intended reading, but
+// it's an inference, not something the paper states directly -- flag
+// if results look off in ways that smell like missing turbulent mixing.
+combustionModel laminar;
+
+laminarCoeffs
+{
+}

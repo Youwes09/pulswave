@@ -1,0 +1,18 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      decomposeParDict;
+}
+
+// scotch, not simple/hierarchical: with only 25,000 cells this decomposes
+// in well under a second, and scotch's graph partitioning balances load
+// automatically without needing per-direction cell counts to divide
+// evenly by your processor grid (1250x500 and 250x100 don't factor
+// cleanly into 16 in both directions -- see chat for the arithmetic).
+// It also handles the jet patch region sensibly without manual tuning.
+
+numberOfSubdomains 16;
+
+method          scotch;

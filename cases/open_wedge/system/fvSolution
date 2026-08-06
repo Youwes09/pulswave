@@ -1,0 +1,51 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+
+// CONFIRMED against actual solve() calls in
+// solverTypeNSSpray_Sutherland/{rhoEqn,rhoUEqn,rhoEEqn,rhoYEqn}_NSSpray_Sutherland.H:
+// rho, rhoU, rhoE are pure explicit (ddt + div only, no laplacian) --
+// diagonal is correct and sufficient. U and e each get a SECOND solve
+// with fvm::laplacian (viscous stress for U, thermophysicalTransport
+// ->divq for e) -- these need a real iterative solver, not diagonal.
+// Yi is solved explicitly by name via YiEqn.solve("Yi"). No p entry
+// needed -- p is computed algebraically (p.ref() = rho()/psi()), never
+// solved.
+
+solvers
+{
+    "(rho|rhoU|rhoE)"
+    {
+        solver          diagonal;
+    }
+
+    U
+    {
+        solver          smoothSolver;
+        smoother        GaussSeidel;
+        tolerance       1e-6;
+        relTol          0;
+    }
+
+    e
+    {
+        $U;
+    }
+
+    h
+    {
+        $U;
+    }
+
+    "Yi"
+    {
+        solver          smoothSolver;
+        smoother        GaussSeidel;
+        tolerance       1e-8;
+        relTol          0;
+    }
+}

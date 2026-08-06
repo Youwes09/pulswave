@@ -1,0 +1,55 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+
+// |U| = 2535.0 m/s, 27 deg incidence, wedge-attached frame (flat mesh,
+// rotated inflow vector -- see blockMeshDict header). Flow points into
+// lowerWall: Ux = +|U|cos(27deg), Uy = -|U|sin(27deg).
+// Ux = 2535.0 * cos(27deg) = 2258.3
+// Uy = -2535.0 * sin(27deg) = -1150.9
+
+dimensions      [0 1 -1 0 0 0 0];
+internalField   uniform (2258.3 -1150.9 0);
+
+boundaryField
+{
+    inflow
+    {
+        type            fixedValue;
+        value           uniform (2258.3 -1150.9 0);
+    }
+    outflow
+    {
+        type            zeroGradient;
+    }
+    upperBoundary
+    {
+        // Far-field per Fig.1(b) of 2605.27871 convention; open_wedge
+        // paper (2506.15247) doesn't give this patch an explicit BC --
+        // treating as zeroGradient (non-reflecting-ish outflow) since
+        // it's outside the shock/jet interaction region at these mesh
+        // dimensions. Revisit if shock reflects off it during the run.
+        type            zeroGradient;
+    }
+    lowerWall
+    {
+        type            slip;
+    }
+    jet
+    {
+        // RESOLVED (was a placeholder guess): patchInjection injects
+        // liquid via Lagrangian parcels as a source term, independent
+        // of this Eulerian BC. The carrier gas doesn't flow through the
+        // physical orifice -- same as the rest of the wall. slip,
+        // matching lowerWall, is correct.
+        type            slip;
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+}
