@@ -1,37 +1,15 @@
-# Nix
 result
 result-*
-
-# Python
 .venv/
 __pycache__/
 *.pyc
-
-# Apptainer images (rebuildable from container/*.def)
 container/*.sif
-*.sif
-
-# OpenFOAM run output
-cases/*/[0-9]*/
-cases/*/*/[0-9]*/
-!cases/*/0/
-!cases/*/0.orig/
-!cases/*/*/0/
-!cases/*/*/0.orig/
-processor[0-9]*/
-postProcessing/
-*.foam
-*.OpenFOAM
-cases/*/detonationFoam_V3.1
-cases/*/FOAM
-cases/*/chemkinToFoam
-cases/*/constant/polyMesh/
-
-# Source PDFs
+cases/
 resources/
-
-# Editor/OS
+aws/
+*.pem
+.claude/
 .DS_Store
+.idea/
 *.swp
 *~
-.idea/

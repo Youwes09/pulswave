@@ -19,8 +19,8 @@ From: ubuntu:20.04
 
     mkdir -p /opt/OpenFOAM
     cd /opt/OpenFOAM
-    git clone --depth 1 --branch master https://github.com/OpenFOAM/OpenFOAM-8.git OpenFOAM-8
-    git clone --depth 1 --branch master https://github.com/OpenFOAM/ThirdParty-8.git ThirdParty-8
+    git clone https://github.com/OpenFOAM/OpenFOAM-8.git OpenFOAM-8 && git -C OpenFOAM-8 checkout a86b07b9dabb8c9e8763a146cac4b5ea7824a52b
+    git clone https://github.com/OpenFOAM/ThirdParty-8.git ThirdParty-8 && git -C ThirdParty-8 checkout 686040d3c082b19de8040bbb61a9b800821eb09a
 
     export HOME=/opt
     unset LOGNAME

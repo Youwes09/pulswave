@@ -1,0 +1,36 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermophysicalProperties;
+}
+
+thermoType
+{
+    type            hePsiThermo;
+    mixture         multiComponentMixture;
+    transport       sutherland;
+    thermo          janaf;
+    energy          sensibleInternalEnergy;
+    equationOfState perfectGas;
+    specie          specie;
+}
+
+#include "speciesThermo"
+
+newFormat       yes;
+inertSpecie     N2;
+
+liquids
+{
+    NXC7H16
+    {
+        type C7H16;
+    }
+    H2O;
+}
+
+solids
+{}

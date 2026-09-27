@@ -1,8 +1,6 @@
-# Case specification: Wang, Hu & Zhang (2026) confined-combustor baseline
+# Confined-combustor baseline specification
 
-Source: Wang, W., Hu, Z., Zhang, P. Liquid-fueled Oblique Detonation
-Stabilized by a Transverse Jet. arXiv:2605.27871. All values transcribed
-directly from Section 2.1-2.3 and Fig. 1/3 unless noted.
+Transcribed from Wang, Hu & Zhang, *Liquid-fueled Oblique Detonation Stabilized by a Transverse Jet*, arXiv:2605.27871, Sections 2.1–2.3 and Figs. 1 and 3.
 
 ## Geometry (Section 2.2, Fig. 1)
 
@@ -15,8 +13,7 @@ directly from Section 2.1-2.3 and Fig. 1/3 unless noted.
   height 60 mm
 - Origin at ramp leading edge, x downstream, y normal to lower wall
 
-Fig. 1(b) is a schematic; the values above are the only explicit lengths
-given. No other dimension is stated in the paper.
+Fig. 1(b) is a schematic. The lengths above are the only ones the paper gives.
 
 ## Inflow / BCs (Section 2.2)
 
@@ -54,18 +51,14 @@ given. No other dimension is stated in the paper.
 
 ## Solver
 
-In-house two-phase solver, rhoCentralFoam framework, **OpenFOAM v7**.
-pulswave targets OpenFOAM 8 (detonationFoam public repo). Not verified
-to be numerically equivalent.
+The authors' rhoCentralFoam-based two-phase solver on OpenFOAM v7. This project uses detonationFoam on OpenFOAM-8.
 
 ## Mesh (Section 2.3)
 
-Grid-independence study at 0.2/0.3/0.4 mm, all with the above mechanism.
-0.3 mm used for production runs.
+Grid study at 0.2, 0.3 and 0.4 mm. 0.3 mm is used for production runs.
 
-## Open items
+## Not stated by the paper
 
-1. Fig. 1(b) dimensions are schematic-derived, not a dimensioned drawing.
-2. u_j not given directly; must be back-calculated from target J.
-3. Air composition not stated; standard 21/79 O2/N2 assumed.
-4. OpenFOAM v7 vs v8, see Solver above.
+- The upper-wall shape, and any dimension beyond those in Fig. 1(b)
+- The jet velocity, which must be back-calculated from J
+- The air composition

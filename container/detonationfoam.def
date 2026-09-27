@@ -16,10 +16,12 @@ From: openfoam8-base.sif
     git clone https://github.com/JieSun-pku/detonationFoam.git /opt/detonationFoam
     bash -c "export HOME=/opt && unset LOGNAME && unset USER && \
         source /opt/OpenFOAM/OpenFOAM-8/etc/bashrc && \
-        cd /opt/detonationFoam && git checkout 'detonationFoam-dev(two-phase)' && \
+        cd /opt/detonationFoam && git checkout 02ed90db0a172f5abb7407347d4205f39274f144 && \
         cd detonationFoam_dev/ROUNDSchemes && chmod +x Allwmake && ./Allwmake && \
         cd ../fluxSchemes_improved && wmake && \
-        cd .. && wmake"
+        cd ../dynamicMesh2D/dynamicMesh && wclean && wmake libso && \
+        cd ../dynamicFvMesh && wclean && wmake libso && \
+        cd ../.. && wmake"
 
 %runscript
     export HOME=/opt

@@ -1,0 +1,48 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+
+ddtSchemes
+{
+    default         Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    default         Gauss linear;
+
+    div(rhoPhi,Yi_h)    Gauss limitedLinear01 1;
+}
+
+interpolationSchemes
+{
+    default             linear;
+    reconstruct(rho)    limitedLinear 1;
+    reconstruct(U)      limitedLinear 1;
+    reconstruct(T)      limitedLinear 1;
+    reconstruct(rhoU)   limitedLinear 1;
+    reconstruct(rPsi)   limitedLinear 1;
+    reconstruct(c)      limitedLinear 1;
+    reconstruct(e)      limitedLinear 1;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxScheme      Kurganov;

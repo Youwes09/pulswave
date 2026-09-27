@@ -1,0 +1,24 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      chemistryProperties;
+}
+
+chemistryType
+{
+    solver          ode;
+}
+
+chemistry       on;
+
+initialChemicalTimeStep 1e-9;
+
+odeCoeffs
+{
+    solver          seulex;
+}
+
+#include "reactions"
