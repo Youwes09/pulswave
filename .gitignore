@@ -13,3 +13,6 @@ aws/
 .idea/
 *.swp
 *~
+paper/manuscript.pdf
+paper/*.aux
+paper/*.log

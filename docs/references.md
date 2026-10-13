@@ -30,7 +30,15 @@ These were used to decide how to represent the jet.
 
 ## Solver, chemistry and software
 
-16. J. Sun, Y. Wang, B. Tian, Z. Chen. detonationFoam: an open-source solver for simulation of gaseous detonation based on OpenFOAM. *Comput. Phys. Commun.* 292 (2023) 108859. Code: github.com/JieSun-pku/detonationFoam, branch `detonationFoam-dev(two-phase)`.
-17. S. Liu, J. C. Hewson, J. H. Chen, H. Pitsch. Effects of strain rate on high-pressure nonpremixed n-heptane autoignition in counterflow. *Combust. Flame* 137 (2004) 320–339. The chemistry mechanism.
-18. OpenFOAM-8, The OpenFOAM Foundation. github.com/OpenFOAM/OpenFOAM-8.
-19. Cantera 3.2.0. cantera.org.
+16. J. Sun, Y. Wang, B. Tian, Z. Chen. detonationFoam: an open-source solver for simulation of gaseous detonation based on OpenFOAM. *Comput. Phys. Commun.* 292 (2023) 108859.
+17. detonationFoam source code. https://github.com/JieSun-pku/detonationFoam, branch `detonationFoam-dev(two-phase)`, commit `02ed90db0a17`. The solver used for every simulation here.
+18. S. Liu, J. C. Hewson, J. H. Chen, H. Pitsch. Effects of strain rate on high-pressure nonpremixed n-heptane autoignition in counterflow. *Combust. Flame* 137 (2004) 320–339. The chemistry mechanism.
+19. OpenFOAM-8, The OpenFOAM Foundation. https://github.com/OpenFOAM/OpenFOAM-8, commit `a86b07b9dabb`.
+20. Cantera 3.2.0. https://cantera.org.
+
+## Other initiation methods
+
+21. Y. Liu. Numerical investigation of Mach 10 kerosene-fueled oblique detonation waves at different flight altitudes. arXiv:2609.02515. Compares wedge-induced with bump-forced initiation of kerosene ODWs, the method used in the Chinese shock-tunnel engine tests. A bump ignites the mixture at its stagnation point and fixes the initiation location without matching inflow, wedge and equivalence ratio. It is the fixed, fuel-free alternative to a transverse jet.
+22. J. Fan, Y. Zhang, G. Xiang, Y. Feng. Numerical investigation of sweeping jet actuator on oblique detonation. *Combust. Flame* 268 (2024) 113622. A gas sweeping jet on the wedge (2D URANS, detailed chemistry) shortens initiation by 25% and keeps the initiation length steadier than a steady jet as jet pressure varies. The closest unsteady-jet work; it uses a periodically redirected gas jet, not an interrupted liquid jet, and does not study switch-off or a critical frequency. No open version.
+23. Y. Liu, L. Wang, B. Xiao, Z. Yan, C. Wang. Hysteresis phenomenon of the oblique detonation wave. *Combust. Flame* 192 (2018) 170–179 (details from a citing reference list; check against the journal). The ODW's final state depends on its history in a wedge-angle sweep: the precedent for treating the front as having memory.
+24. Z. Zhang, C.-Y. Wen. 斜爆轰发动机：斜爆轰波在受限空间中的起爆与稳定 (Oblique detonation engines: initiation and stabilization of oblique detonation waves in confined space). *Acta Aerodyn. Sin.* 43(9) (2025) 65–91, doi:10.7638/kqdlxxb-2025.0102. Review; covers jet-assisted and bump-forced initiation and compares continuous with pulsed energy deposition. Cites no pulsed or interrupted fuel jet.

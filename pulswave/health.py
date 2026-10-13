@@ -12,11 +12,13 @@ BOXES = {
 }
 
 
-def boundaries(rows, s=PRESETS["paper_j1"]):
-    out_col = [r for r in rows if r["x"] > s.lx - s.dx]
-    top = [r for r in rows if r["y"] > s.ly - s.dx]
+def boundaries(rows, dx=0.2e-3):
+    x_max = max(r["x"] for r in rows)
+    y_max = max(r["y"] for r in rows)
+    out_col = [r for r in rows if r["x"] > x_max - 0.5 * dx]
+    top = [r for r in rows if r["y"] > y_max - 0.5 * dx]
     return {
-        "outflow_min_mach": min(r["ux"] / sound(r["T"]) for r in out_col),
+        "outflow_min_mach": min(r["ux"] / sound(r) for r in out_col),
         "top_T_range": (min(r["T"] for r in top), max(r["T"] for r in top)),
         "top_p_range_atm": (min(r["p"] for r in top) / ATM, max(r["p"] for r in top) / ATM),
     }
@@ -24,7 +26,8 @@ def boundaries(rows, s=PRESETS["paper_j1"]):
 
 def shock_height(rows, xs_mm=(20, 40, 80, 120, 160, 200, 240), dx=0.2e-3):
     out = []
-    for xm in xs_mm:
+    x_max = max(r["x"] for r in rows) * 1e3
+    for xm in (x for x in xs_mm if x < x_max):
         col = sorted((r for r in rows if int(r["x"] / dx) == int(xm * 1e-3 / dx + 1e-6)), key=lambda r: -r["y"])
         s = next((r for r in col if r["p"] > 0.5 * ATM), None)
         h = s["y"] * 1e3 if s else float("nan")

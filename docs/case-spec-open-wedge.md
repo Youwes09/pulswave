@@ -37,7 +37,7 @@ Uniform grids of 0.15, 0.2, 0.4 and 0.8 mm (1.11e6, 6.25e5, 1.56e5 and 3.91e4 ce
 ## Models and numerics
 
 - Chemistry: 44-species, 112-reaction n-heptane mechanism (Liu, Hewson, Chen & Pitsch 2004)
-- Droplets: Abramzon–Sirignano evaporation, Pilch–Erdman breakup, Ranz–Marshall heat transfer, C_d = 0.424 for Re_p > 1000
+- Droplets: Abramzon–Sirignano evaporation, Pilch–Erdman breakup, Ranz–Marshall heat transfer (the paper); C_d = 0.424 for Re_p > 1000 is not in this paper but in the authors' solver paper, arXiv:2404.03170
 - Gas: Sutherland viscosity
 - Numerics: KNP fluxes, Gauss limited-linear spatial scheme, first-order Euler time stepping, CFL 0.3
 - Condensed species tracked: C7H16 and H2O
@@ -51,7 +51,7 @@ Uniform grids of 0.15, 0.2, 0.4 and 0.8 mm (1.11e6, 6.25e5, 1.56e5 and 3.91e4 ce
 | Droplet inflow, no jet (Fig. 3b) | No ODW forms |
 | Droplet inflow, J = 1 (Fig. 3c) | The shock the jet creates couples to combustion at the jet, and the main ODW follows |
 | J = 0.1–0.3 | Weaker shock at the jet, not coupled. The jet enriches the mixture and low- and intermediate-temperature chemistry leads to an ODW downstream (about x = 0.08 m). The flame front fluctuates around x = 0.1 m. |
-| J ≥ 0.4 | The jet triggers detonation directly, acting mainly as an obstacle. J = 0.4 is the minimum for reliable ODW formation. |
+| J ≥ 0.4 | The jet triggers detonation directly, acting mainly as an obstacle. The paper calls J = 0.4 adequate for direct formation under these conditions; J = 0.1–0.3 also form an ODW, downstream. |
 | J = 2 | The shock detaches to about x = 0.04 m, with a Mach reflection at the wall |
 | Water jet at J = 0.1 | Cyclic and unstable |
 | On-wedge strip | Reproduces the obstacle mechanism of high-J jets |

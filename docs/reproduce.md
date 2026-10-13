@@ -41,10 +41,15 @@ scripts/run.sh cases/<name>
 | `crop_jet` | 80 × 15 | same | droplets | J = 1 | 50 | 8 | Near-jet anchoring test |
 | `crop_nojet` | 60 × 15 | same | droplets | none | 60 | 8 | Fig. 3b near-wall state |
 | `crop_vapor` | 100 × 16 | same | premixed vapour, φ = 1 | none | 150 | 8 | Fig. 3a |
+| `box_small` | 90 × 35 | same as `paper_j1` | droplets | J = 1 | 80 | 8 | Screening domain ([experiments.md](experiments.md)) |
+| `box_large` | 120 × 45 | same | droplets | J = 1 | 80 | 8 | Screening domain containing the subsonic part of the wall wake |
+| `crop_grid` | 100 × 25 | same | droplets | J = 1 | 50 | 8 | Grid-check crop at 0.2 mm ([experiments.md](experiments.md#step-4-grid-check-of-the-memory)) |
+| `crop_grid_fine` | 100 × 25 | same | droplets | J = 1 | 50 | 8 | The same crop at 0.15 mm (667 × 167 cells; the jet patch is three faces, 0.45 mm) |
+| `crop_grid_d1` | 100 × 25 | same | droplets | J = 1, 1 mm jet | 50 | 8 | Memory scaling with jet width: twice the jet width and fuel at the same J |
 | `guo_phi1` | 60 × 20 | 298 K, 1 atm, 2900 m/s at 30° | premixed, φ = 1 | none | 80 | 8 | arXiv:2202.04987, φ = 1 |
 | `guo_phi02` | 60 × 20 | same | premixed, φ = 0.2 | none | 80 | 8 | arXiv:2202.04987, φ = 0.2 |
 
-The cell size is 0.2 mm everywhere, the paper's production resolution.
+The cell size is 0.2 mm, the paper's production resolution, everywhere except `crop_grid_fine`.
 
 Ignition-delay cases run serially:
 

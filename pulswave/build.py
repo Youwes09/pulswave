@@ -1,7 +1,11 @@
+import glob
+import json
 import math
 import os
 import shutil
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, replace
+
+from . import foam
 
 TEMPLATE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "template")
 DEPTH = 2e-3
@@ -35,7 +39,16 @@ class Setup:
     phi_vapor: float = 0.0
     spray: bool = True
     jet_u: float = 0.0
+    jet_windows: tuple = ()
+    wall: str = "rebound"
     dx: float = 0.2e-3
+    jet_faces: int = 2
+    jet_d: float = JET_D
+    jet_scale: float = 1.0
+
+    @property
+    def jet_rate(self):
+        return RHO_L * self.jet_u * self.jet_d * DEPTH * self.jet_faces / 2 * self.jet_scale
 
     @property
     def U(self):
@@ -58,8 +71,18 @@ PRESETS = {
     "crop_nojet": Setup(0.06, 0.015, 6e-5, 5e-6, 8),
     "crop_vapor": Setup(0.1, 0.016, 1.5e-4, 5e-6, 8, phi_vapor=1.0, spray=False),
     "guo_phi1": Setup(0.06, 0.02, 8e-5, 4e-6, 8, T=298.0, p=101325.0, u=2900.0, wedge=30.0, phi_vapor=1.0, spray=False),
+    "box_small": Setup(0.09, 0.035, 8e-5, 5e-6, 8, jet_u=JET_U[1.0]),
+    "box_large": Setup(0.12, 0.045, 8e-5, 5e-6, 8, jet_u=JET_U[1.0]),
     "guo_phi02": Setup(0.06, 0.02, 8e-5, 4e-6, 8, T=298.0, p=101325.0, u=2900.0, wedge=30.0, phi_vapor=0.2, spray=False),
+    "crop_grid": Setup(0.1, 0.025, 5e-5, 5e-6, 8, jet_u=JET_U[1.0]),
+    "crop_grid_fine": Setup(0.1, 0.025, 5e-5, 5e-6, 8, jet_u=JET_U[1.0], dx=0.15e-3),
+    "crop_grid_d1": Setup(0.1, 0.025, 5e-5, 5e-6, 8, jet_u=JET_U[1.0], jet_d=1e-3),
 }
+
+
+def pulse_windows(f, duty, t0, t1):
+    n = math.ceil((t1 - t0) * f - 1e-9)
+    return tuple((t0 + k / f, duty / f) for k in range(n))
 
 
 def header(cls, obj, loc=None):
@@ -91,8 +114,8 @@ mergePatchPairs ();
 """
 
 
-def jet_patch():
-    h = JET_D / 2
+def jet_patch(s):
+    h = s.jet_d / 2 - 1e-7
     topo = header("dictionary", "topoSetDict") + f"""actions
 (
     {{
@@ -142,13 +165,20 @@ def initial(s):
     return out
 
 
-def injector(name, patch, U0, mass, pps, basis, size, duration, soi=0):
-    lines = [
-        "type            patchInjection;",
-        f"patchName       {patch};",
+def on_patch(patch, U0):
+    return ["type            patchInjection;", f"patchName       {patch};", f"U0              ({U0[0]:.3f} {U0[1]:.3f} 0);"]
+
+
+def on_face(x, width, u):
+    return ["type            coneInjection;", f"position        ({x:g} 1e-05 0);", "direction       (0 1 0);",
+            "thetaInner      0;", "thetaOuter      0;", "injectionMethod disc;", "dInner          0;",
+            f"dOuter          {width:g};", "flowType        constantVelocity;", f"Umag            {u:g};"]
+
+
+def injector(name, where, mass, pps, basis, size, duration, soi=0):
+    lines = where + [
         f"SOI             {soi:g};",
         f"duration        {duration:g};",
-        f"U0              ({U0[0]:.3f} {U0[1]:.3f} 0);",
         f"massTotal       {mass:.6g};",
         f"parcelBasisType {basis};",
     ]
@@ -170,23 +200,27 @@ def fuel_rate(s, un, length):
     return s.p / (287.0 * s.T) * un * length * DEPTH / AFR
 
 
-def injectors(s):
+def injectors(s, first=0):
     ux, uy = s.U
     out = []
     if s.spray:
         for name, patch, un, length in (("inflow", "inflow", ux, s.ly), ("upper", "upperBoundary", -uy, s.lx)):
             rate = fuel_rate(s, un, length)
-            out.append(injector(name, patch, (ux, uy), rate * s.duration, rate / parcel_mass(), "fixed", FIXED, s.duration))
+            out.append(injector(name, on_patch(patch, (ux, uy)), rate * s.duration, rate / parcel_mass(), "fixed", FIXED, s.duration))
     if s.jet_u:
-        mass = RHO_L * s.jet_u * JET_D * DEPTH * s.duration
-        out.append(injector("jet", "jet", (0.0, s.jet_u), mass, JET_PPS, "mass", ROSIN, s.duration))
+        windows = s.jet_windows or ((0.0, s.duration),)
+        where = on_patch("jet", (0.0, s.jet_u)) if s.jet_faces == 2 else on_face(JET_X + s.dx / 2, s.dx, s.jet_u)
+        pps = JET_PPS * s.jet_rate / (RHO_L * s.jet_u * JET_D * DEPTH)
+        for i, (t0, dt) in enumerate(windows, first):
+            name = "jet" if t0 == 0 else f"jet{i}"
+            out.append(injector(name, where, s.jet_rate * dt, pps, "mass", ROSIN, dt, soi=t0))
     if not out:
         mass = RHO_L * JET_U[1.0] * JET_D * DEPTH * s.duration
-        out.append(injector("dormant", "lowerWall", (0.0, JET_U[1.0]), mass, JET_PPS, "mass", ROSIN, s.duration, soi=1))
+        out.append(injector("dormant", on_patch("lowerWall", (0.0, JET_U[1.0])), mass, JET_PPS, "mass", ROSIN, s.duration, soi=1))
     return "".join(out)
 
 
-def spray_cloud(s):
+def spray_cloud(s, first=0):
     return header("dictionary", "sprayCloudProperties", "constant") + """solution
 {
     active          true;
@@ -238,7 +272,7 @@ subModels
 
     injectionModels
     {
-""" + injectors(s) + """    }
+""" + injectors(s, first) + """    }
 
     dispersionModel none;
     patchInteractionModel standardWallInteraction;
@@ -251,7 +285,7 @@ subModels
     stochasticCollisionModel none;
     radiation       off;
 
-    standardWallInteractionCoeffs { type rebound; }
+    standardWallInteractionCoeffs { type """ + s.wall + """; }
     RanzMarshallCoeffs { BirdCorrection true; }
     singlePhaseMixtureCoeffs { phases ( liquid { NXC7H16 1; } ); }
     liquidEvaporationBoilCoeffs { enthalpyTransfer enthalpyDifference; activeLiquids ( NXC7H16 ); }
@@ -304,9 +338,35 @@ def build(s, dest):
     files = {"system/blockMeshDict": block_mesh(s), "system/controlDict": control(s),
              "system/decomposeParDict": decompose(s.nproc), "constant/sprayCloudProperties": spray_cloud(s)}
     if s.jet_u:
-        files["system/topoSetDict"], files["system/createPatchDict"] = jet_patch()
+        files["system/topoSetDict"], files["system/createPatchDict"] = jet_patch(s)
     files.update({f"0/{k}": v for k, v in initial(s).items()})
+    files["setup.json"] = json.dumps(asdict(s), indent=1)
     write(dest, files)
+
+
+def load_setup(case):
+    d = json.load(open(os.path.join(case, "setup.json")))
+    d["jet_windows"] = tuple(tuple(w) for w in d["jet_windows"])
+    return Setup(**d)
+
+
+def branch(src, dest, time, drop_jet_liquid=False, **changes):
+    parent = load_setup(src)
+    s = replace(parent, **changes)
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    for sub in ("constant", "system"):
+        shutil.copytree(os.path.join(src, sub), os.path.join(dest, sub))
+    for part in glob.glob(os.path.join(src, "processor*")):
+        name = os.path.basename(part)
+        for sub in ("constant", "0", time):
+            shutil.copytree(os.path.join(part, sub), os.path.join(dest, name, sub))
+        cloud = os.path.join(dest, name, time, "lagrangian", "sprayCloud")
+        if drop_jet_liquid and os.path.exists(os.path.join(cloud, "position0")):
+            foam.filter_cloud(cloud, [not (abs(x - JET_X) <= parent.jet_d and y < 1e-4) for x, y, _ in foam.injected_at(cloud)])
+    write(dest, {"constant/sprayCloudProperties": spray_cloud(s, len(parent.jet_windows)), "system/controlDict": control(s),
+                 "setup.json": json.dumps(asdict(s), indent=1)})
+    return s
 
 
 def build_ignition(dest, T, p=2.8e5, phi=1.0, end=4e-4):

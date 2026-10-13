@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from .foam import ATM
+from .profiles import line, mach
 from .reference import FIG3C_FRONT
 
 
@@ -11,14 +12,24 @@ def _by_row(rows, key, dx=0.2e-3):
     return out
 
 
+def _cells(dx):
+    # windows were set as cell counts on the 0.2 mm grid; keep their physical length on other grids
+    return lambda k: max(1, round(k * 0.2e-3 / dx))
+
+
 def structure(rows, heights_mm=(1, 2, 3, 4, 6, 9, 12, 15, 18, 22, 26, 30, 34, 38), x0=0.035, x1=0.14, dx=0.2e-3):
     rows_y = _by_row(rows, "y", dx)
     out = []
     for h in heights_mm:
         line = sorted((r for r in rows_y[int(h * 1e-3 / dx + 1e-6)] if x0 < r["x"] < x1), key=lambda r: r["x"])
-        j = max(range(2, len(line)), key=lambda i: line[i]["p"] - line[i - 2]["p"])
-        ratio = max(r["p"] for r in line[j:j + 10]) / line[max(j - 4, 0)]["p"]
-        burn = next((r["x"] for r in line[j - 2:] if r["CO2"] > 0.02), None)
+        if len(line) < 3:
+            continue
+        n = _cells(dx)
+        rise = [line[i]["p"] - line[i - n(2)]["p"] if i >= n(2) else 0.0 for i in range(len(line))]
+        shocks = [i for i in range(n(2), len(line)) if rise[i] >= 0.3 * max(rise)]
+        j = next((i for i in shocks if any(r["CO2"] > 0.02 for r in line[i - n(2):i + n(5)])), shocks[0])
+        ratio = max(r["p"] for r in line[j:j + n(10)]) / line[max(j - n(4), 0)]["p"]
+        burn = next((r["x"] for r in line[j - n(2):] if r["CO2"] > 0.02), None)
         gap = None if burn is None else (burn - line[j]["x"]) * 1e3
         out.append((h, line[j]["x"] * 1e3, ratio, gap))
     return out
@@ -46,3 +57,76 @@ def anchor(rows, x_jet=0.05):
         "upstream_hot_cells": sum(r["T"] > 1500 for r in near),
         "burnt_cells": sum(r["CO2"] > 0.02 for r in rows),
     }
+
+
+def near_jet(rows, parcels, x_jet=0.05):
+    up = [r for r in rows if 0.02 < r["x"] < x_jet - 0.005 and r["y"] < 1e-3]
+    upstream = {k: sum(r[k] for r in up) / len(up) for k in ("T", "p", "ux", "NXC7H16", "O2")}
+    layer = [r for r in rows if r["x"] > x_jet - 0.0005 and r["y"] < 1e-3 and r["NXC7H16"] > 0.2]
+    wake = [r for r in layer if mach(r) < 1]
+    near = [p for p in parcels if x_jet - 0.0005 < p[0] < x_jet + 0.03 and p[1] < 3e-3]
+    fronts = []
+    for y_mm in (3, 6, 9, 12, 15):
+        hot = [r for r in line(rows, y_mm * 1e-3, x_jet - 0.005, 0.1) if r["T"] > 2500]
+        if hot:
+            seg = [r for r in hot if r["x"] <= hot[0]["x"] + 0.02]
+            fronts.append((y_mm, hot[0]["x"] * 1e3, sum(r["ux"] for r in seg) / len(seg)))
+    return {
+        "upstream": upstream,
+        "layer_x_mm": (min(r["x"] for r in layer) * 1e3, max(r["x"] for r in layer) * 1e3),
+        "layer": {k: sum(r[k] for r in layer) / len(layer) for k in ("T", "p", "ux", "NXC7H16", "O2")},
+        "subsonic_x_mm": (min(r["x"] for r in wake) * 1e3, max(r["x"] for r in wake) * 1e3) if wake else None,
+        "subsonic_ux": sum(r["ux"] for r in wake) / len(wake) if wake else float("nan"),
+        "fronts": fronts,
+        "liquid_near_jet_kg": sum(p[3] for p in near),
+        "parcels_near_jet": len(near),
+    }
+
+
+def pocket(rows, parcels, x0=0.0495, x1=0.08, y1=3e-3, dx=0.2e-3, depth=2e-3, rho_l=680.0):
+    grid = {(int(r["x"] / dx), int(r["y"] / dx)): r for r in rows}
+    sel = [(m, d, Td, grid[(int(x / dx), int(y / dx))]) for x, y, d, m, Td in parcels if x0 < x < x1 and y < y1]
+    M = sum(s[0] for s in sel)
+    cell = dx * dx * depth
+    gas = sum(r["rho"] for r in rows if x0 < r["x"] < x1 and r["y"] < y1) * cell
+    occupied = {id(g): g for *_, g in sel}
+    gas_occupied = sum(g["rho"] for g in occupied.values()) * cell
+
+    def avg(f):
+        return sum(m * f(d, Td, g) for m, d, Td, g in sel) / M
+
+    return {
+        "liquid_kg": M,
+        "parcels": len(sel),
+        "d": avg(lambda d, Td, g: d),
+        "T_droplet": avg(lambda d, Td, g: Td),
+        "T_gas": avg(lambda d, Td, g: g["T"]),
+        "C7H16_gas": avg(lambda d, Td, g: g["NXC7H16"]),
+        "liquid_in_hot_gas": sum(m for m, _, _, g in sel if g["T"] > 800) / M,
+        "mass_loading": M / gas,
+        "volume_fraction": M / rho_l / ((x1 - x0) * y1 * depth),
+        "occupied_cells": len(occupied),
+        "mass_loading_occupied": M / gas_occupied,
+        "volume_fraction_occupied": M / rho_l / (len(occupied) * cell),
+    }
+
+
+def liquid_edge(parcels, x0=0.0495, x1=0.1, y1=3e-3, near=0.0525, quantiles=(0.05, 0.25, 0.5)):
+    """Wall liquid behind the jet: total mass, mass within 3 mm of the jet, and the x below which each quantile lies."""
+    ps = sorted((p[0], p[3]) for p in parcels if x0 < p[0] < x1 and p[1] < y1)
+    total = sum(m for _, m in ps)
+    xs, acc, qs = [], 0.0, list(quantiles)
+    for x, m in ps:
+        acc += m
+        while qs and acc >= qs[0] * total:
+            xs.append(x)
+            qs.pop(0)
+    return total, sum(m for x, m in ps if x < near), xs
+
+
+def liquid_map(parcels, x_bin=0.01, x_max=0.11):
+    out = defaultdict(float)
+    for x, y, _, m in parcels:
+        band = "y<1" if y < 1e-3 else "1-5" if y < 5e-3 else ">5"
+        out[(min(int(x / x_bin), int(x_max / x_bin)), band)] += m
+    return out

@@ -88,3 +88,16 @@ def thermo_mismatch(species_thermo, temps=(300.0, 700.0, 1000.0, 1500.0, 2500.0)
             worst_cp = max(worst_cp, (d_cp, (name, T)))
             worst_h = max(worst_h, (d_h, (name, T)))
     return worst_cp, worst_h
+
+
+def timescales(T, p, Y, u, g=None):
+    g = g or gas()
+    g.TPY = T, p, Y
+    a = math.sqrt(g.cp / g.cv * ct.gas_constant / g.mean_molecular_weight * T)
+    T2, p2, _ = normal_shock(g, T, p, Y, u)
+    return {
+        "mach": u / a,
+        "tau_ign_upstream": ignition_delay(T, p, Y, t_max=2e-2, g=g),
+        "postshock": (T2, p2),
+        "tau_ign_postshock": ignition_delay(T2, p2, Y, t_max=1e-3, g=g),
+    }

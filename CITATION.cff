@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "pulswave: pulsed transverse liquid-jet actuation of oblique detonation waves"
+abstract: "Numerical study of how an oblique detonation wave (ODW) held by a transverse liquid jet responds when the jet is interrupted or pulsed, in a liquid-fuelled oblique detonation engine combustor: how long the front stays anchored after the jet stops, what sets that memory, and the pulse frequency below which the front is no longer held. Benchmarked against a published continuous-jet baseline."
+authors:
+  - given-names: Yuvan
+    family-names: Senthilkumar
+    alias: Youwes09
+repository-code: "https://github.com/Youwes09/pulswave"
+keywords:
+  - oblique detonation wave
+  - liquid jet in supersonic crossflow
+  - two-phase detonation
+  - OpenFOAM
+  - detonationFoam
+references:
+  - type: article
+    title: "Liquid-fueled oblique detonation waves induced by reactive and non-reactive transverse liquid jets"
+    authors:
+      - family-names: Wang
+        given-names: Wenhao
+      - family-names: Hu
+        given-names: Zongmin
+      - family-names: Zhang
+        given-names: Peng
+    journal: "Aerospace Science and Technology"
+    volume: 168
+    start: 111293
+    year: 2026
+    identifiers:
+      - type: other
+        value: "arXiv:2506.15247"
+  - type: article
+    title: "detonationFoam: An open-source solver for simulation of gaseous detonation based on OpenFOAM"
+    authors:
+      - family-names: Sun
+        given-names: Jie
+      - family-names: Wang
+        given-names: Yiqing
+      - family-names: Tian
+        given-names: Baolin
+      - family-names: Chen
+        given-names: Zheng
+    journal: "Computer Physics Communications"
+    volume: 292
+    start: 108859
+    year: 2023
+  - type: software
+    title: "detonationFoam"
+    authors:
+      - family-names: Sun
+        given-names: Jie
+    repository-code: "https://github.com/JieSun-pku/detonationFoam"
+    commit: "02ed90db0a172f5abb7407347d4205f39274f144"
+    notes: "Branch detonationFoam-dev(two-phase); the solver used for every simulation in this repository."
+  - type: software
+    title: "OpenFOAM-8"
+    authors:
+      - name: "The OpenFOAM Foundation"
+    repository-code: "https://github.com/OpenFOAM/OpenFOAM-8"
+    commit: "a86b07b9dabb8c9e8763a146cac4b5ea7824a52b"

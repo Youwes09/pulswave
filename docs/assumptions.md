@@ -6,7 +6,7 @@ Values the source papers do not state, and changes needed for this solver. Every
 
 - **Frame:** the domain is aligned with the wedge surface. x runs along the wall from the leading edge, and the freestream enters at −27°. The freestream therefore crosses both the left patch (`inflow`) and the top patch (`upperBoundary`), and both carry the same fixed freestream state.
 - **Depth:** the case is 2-D with a depth of 2 mm, one cell. Every mass flow is per 2 mm of depth.
-- **Air:** dry, O2 0.232 and N2 0.768 by mass.
+- **Air:** dry, O2 0.232 and N2 0.768 by mass in the freestream spray cases. The premixed cases (`premixed()`, n-C7H16 : O2 : N2 = φ : 11 : 41.36 by moles) and `theory.AIR` correspond to O2 0.233; the 0.4% difference in O2 is below every comparison made with them.
 - **Premixed mixtures** (Guo cases and `crop_vapor`): n-C7H16 : O2 : N2 = φ : 11 : 41.36 by moles.
 
 ## Freestream droplets
@@ -17,9 +17,10 @@ Values the source papers do not state, and changes needed for this solver. Every
 
 ## Jet
 
-- **Jet width:** the paper's jet is D = 0.5 mm. On a 0.2 mm mesh the jet patch is two faces, which is 0.4 mm wide. The injected mass flow is the paper's, ρ_l · u_j · D · depth, so the mass and momentum flux per unit depth match the paper.
+- **Jet width and mass flow:** the paper's jet is D = 0.5 mm and states no mass flow. The injected mass flow is chosen as that of a solid liquid slot, ρ_l · u_j · D per unit depth (41.4 g/s per 2 mm at J = 1). On a 0.2 mm mesh the jet patch is two faces, 0.4 mm wide, carrying that mass flow at the paper's velocity, so mass and momentum per unit depth are those of the 0.5 mm jet and the momentum flux per unit area is 1.25 times the nominal value. J is quoted by velocity, as in the paper. On the 0.15 mm mesh the patch is three faces (0.45 mm), a factor 1.11. `--half-width` keeps the per-area flux; `--jet-scale F` multiplies it by F at the same velocity.
 - **Velocity:** normal to the wall, at the paper's value for each J. J is defined against the post-shock state: 19.24, 43.01, 60.83 and 86.02 m/s for J = 0.1, 0.5, 1 and 2.
-- **Droplet sizes:** Rosin–Rammler with a mean of 10 µm (the only value the paper gives), spread n = 3, range 1–30 µm. Mass basis, 7.21e8 parcels/s, 300 K.
+- **Droplet sizes:** Rosin–Rammler with a mean of 10 µm (the only value the paper gives), spread n = 3, range 1–30 µm, 300 K: the spread and range are chosen. Parcels are injected on a mass basis (equal mass per parcel), so the distribution applies by mass and the number-mean droplet diameter is below 10 µm.
+- **Jet parcel rate:** 7.21e8 parcels/s at J = 1 (`JET_PPS`), scaled with the jet mass flow for other settings. This is a chosen value whose origin was not recorded; it gives about 160 droplets of 10 µm per parcel, against the 10 per parcel the paper states for the freestream spray. It is well below the 2.1e9 parcels/s solver limit.
 
 ## Spray models
 
@@ -28,10 +29,10 @@ The paper cites Abramzon–Sirignano evaporation, which OpenFOAM-8 does not prov
 - `liquidEvaporationBoil` evaporation
 - Pilch–Erdman breakup with B1 = 0.75 and B2 = 0.348
 - Ranz–Marshall heat transfer with Bird correction
-- `sphereDrag` (C_d = 0.424 above Re = 1000, as the paper states)
+- `sphereDrag` (C_d = 0.424 above Re = 1000, as in arXiv:2404.03170 Eq. 2.11 and arXiv:2605.27871)
 - explicit two-way coupling sources, which is the paper's PSI-CELL method
 
-The paper does not specify droplet–wall interaction; `rebound` is used.
+The paper does not specify droplet–wall interaction; `rebound` is used, as in the authors' public case.
 
 ## Numerics
 

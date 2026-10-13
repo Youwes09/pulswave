@@ -7,9 +7,9 @@ Each check compares the setup against a known answer: theory, a published number
 | Check | Reference | Result |
 |---|---|---|
 | Thermodynamic data, 44 species, 300–2500 K | Cantera | cp and h identical (0.000%) |
-| Ignition at 1400 K, 2.8 atm, φ = 1 (chemFoam) | Cantera heat-release peak, 87.9 µs | T passes 1700 K at 84.8 µs |
+| Ignition at 1400 K, 2.8 bar, φ = 1 (chemFoam) | Cantera: T passes 1700 K at 86.1 µs (heat-release peak 87.9 µs) | T passes 1700 K at 84.8 µs |
 
-Cantera ignition delays at 2.8 atm and φ = 1, used to interpret the runs: 1169, 87.9, 32.4, 6.7 and 1.2 µs at 1200, 1400, 1485, 1645 and 1900 K.
+Cantera ignition delays at 2.8 bar (2.76 atm) and φ = 1, used to interpret the runs: 1169, 87.9, 32.4, 6.7 and 1.2 µs at 1200, 1400, 1485, 1645 and 1900 K.
 
 detonationFoam treats `thermo.he()` as the internal energy (`createFields.H:19`), so every case uses `energy sensibleInternalEnergy`. With `sensibleEnthalpy`, shocks come out about 15% too cold: the Guo φ = 1 post-shock temperature falls from 1454 K to 1222 K. Runs made before this correction are invalid.
 
@@ -26,14 +26,14 @@ Derived values used elsewhere in this record:
 |---|---|
 | Engine inflow shock, stoichiometric vapour | 1485 K, 8.73° to the wall |
 | Engine inflow shock, air | 1646 K, 10.24° to the wall |
-| Chapman–Jouguet state, vapour at 1200 K and 2.8 atm | 1790 m/s, p/p1 = 5.0, 3163 K |
+| Chapman–Jouguet state, vapour at 1200 K and 2.8 bar | 1790 m/s, p/p1 = 5.0, 3163 K |
 
 ## 3. Premixed ODW on a 30° wedge (arXiv:2202.04987)
 
 | | Paper | This work |
 |---|---|---|
-| φ = 1 initiation length | 19.8 mm, abrupt transition | 20.5 mm (T > 1.1 × post-shock) and 21.7 mm (heat-release peak), abrupt, at 16 µs |
-| φ = 0.2 initiation length | 3.47 mm, smooth transition | 4.1 mm, smooth, steady |
+| φ = 1 initiation length (heat-release peak, the paper's definition) | 19.8 mm, abrupt transition | 21.7 mm (+10%), abrupt, at 16 µs; 20.5 mm by T > 1.1 × post-shock |
+| φ = 0.2 initiation length (heat-release peak) | 3.47 mm, smooth transition | 4.1 mm (+18%), smooth, steady |
 
 ## 4. Open wedge, vapour inflow (`crop_vapor`, paper Fig. 3a)
 
@@ -53,12 +53,12 @@ The paper reports about 1200 K near the wall, rising fuel vapour and no combusti
 
 - After the startup transient, burning is anchored at x = 49.5 mm, with the upstream gas at about 1180 K and no CO2.
 - Shock and reaction coincide up to about 10 mm off the wall.
-- Peak pressure is 8.7 times the pre-jet value, above the Chapman–Jouguet ratio of 5.0.
+- Peak pressure is 8.7 times the pre-jet value, above the Chapman–Jouguet ratio: 5.0 for stoichiometric vapour at 1200 K, and about 5.7 for the local near-wall mixture (φ ≈ 1.56 at 1134 K).
 - The 15 mm domain height is too low to show the main ODW.
 
 ## 7. Full J = 1 case (`paper_j1`, paper Fig. 3c)
 
-The case is still running. See [reproduce.md](reproduce.md) for how its initial state differs from a clean build. Values below are at 90 µs.
+The run ended at 100 µs, the paper's snapshot time. See [reproduce.md](reproduce.md) for how its initial state differs from a clean build. Values below are at 90 µs; at 100 µs the front near the jet is within about 1.5 mm of the paper's and the upper front 3–7 mm lower ([status.md](status.md)).
 
 **Wave structure.** The run shows the mechanism the paper reports for J = 1:
 - A jet-induced ODW forms at the jet. Below 6 mm from the wall its shock foot has held at x = 49.7–52.1 mm for 55 µs.
@@ -89,5 +89,6 @@ The case is still running. See [reproduce.md](reproduce.md) for how its initial 
 ## Open differences
 
 - The front near the jet sits 1–2 mm lower than the paper's. Candidate causes are inputs the paper does not state: the jet droplet size spread, droplets bouncing off the wall, and the 0.4 mm jet patch (see [assumptions.md](assumptions.md)).
-- The upper front is still converging at 90 µs. Because the droplets were lost at the start, its effective development time is shorter than the paper's.
-- Total-pressure loss and fuel use have not been computed yet. They are the baseline the pulsed study needs.
+- The upper front was still converging slowly when the run ended at 100 µs. Because the droplets were lost at the start, its effective development time is shorter than the paper's.
+- Jet droplets stay within about 30 mm of the jet, while the paper's Fig. 3c shows them along the whole wall downstream. The likely cause is the droplet–wall model (`rebound`), which the paper does not state ([experiments.md](experiments.md#finding-jet-liquid-accumulates-near-the-jet)).
+- The total-pressure and fuel baseline is in [experiments.md](experiments.md#performance-metric-and-continuous-jet-baseline).

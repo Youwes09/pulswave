@@ -1,6 +1,8 @@
 import math
 
 KEYS = ("T", "p", "NXC7H16", "CO2", "O2")
+SPECIES_W_CP = {"NXC7H16": (100.2, 290.0), "O2": (32.0, 33.5), "CO2": (44.0, 50.0), "H2O": (18.0, 38.0)}
+REST_W_CP = (28.0, 31.0)
 
 
 def line(rows, y, x0, x1, dx=0.2e-3):
@@ -8,12 +10,16 @@ def line(rows, y, x0, x1, dx=0.2e-3):
     return sorted((r for r in rows if int(r["y"] / dx) == j and x0 <= r["x"] <= x1), key=lambda r: r["x"])
 
 
-def sound(T):
-    return math.sqrt(1.3 * 8.314 / 0.0288 * T)
+def sound(r):
+    moles = {k: r.get(k, 0.0) / w for k, (w, _) in SPECIES_W_CP.items()}
+    rest = max(1.0 - sum(r.get(k, 0.0) for k in SPECIES_W_CP), 0.0) / REST_W_CP[0]
+    total = sum(moles.values()) + rest
+    cp = (sum(n * SPECIES_W_CP[k][1] for k, n in moles.items()) + rest * REST_W_CP[1]) / total
+    return math.sqrt(cp / (cp - 8.314) * 8.314 * total * 1e3 * r["T"])
 
 
 def mach(r):
-    return math.hypot(r["ux"], r["uy"]) / sound(r["T"])
+    return math.hypot(r["ux"], r["uy"]) / sound(r)
 
 
 def streamline(rows, x0=0.0, y0=1e-3, dx=0.2e-3, ds=0.05e-3):

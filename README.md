@@ -1,6 +1,6 @@
 # pulswave
 
-Numerical study of pulsed transverse liquid-jet actuation for initiating and stabilizing oblique detonation waves (ODW) in liquid-fuelled oblique detonation engine combustors, benchmarked against published continuous-jet baselines.
+Numerical study of how an oblique detonation wave (ODW) held by a transverse liquid jet responds when the jet is interrupted or pulsed, in a liquid-fuelled oblique detonation engine combustor: how long the front stays anchored after the jet stops, what sets that memory, and the pulse frequency below which the front is no longer held. Benchmarked against a published continuous-jet baseline.
 
 ## Layout
 
@@ -11,7 +11,9 @@ Numerical study of pulsed transverse liquid-jet actuation for initiating and sta
 | `template/` | Static OpenFOAM dictionaries shared by every case |
 | `pulswave/` | Python package: case builder, analysis and theory checks (`python -m pulswave`) |
 | `scripts/run.sh` | Meshes, decomposes and launches a case |
+| `scripts/checks/` | One-off checks behind statements in the docs (tracker comparison, total pressure against Cantera) |
 | `docs/` | Research context, reproduction steps, validation record and tool reference |
+| `paper/` | Manuscript (`manuscript.tex`), its figures, the data behind them (`data/`) and the script that plots them (`figures.py`) |
 | `resources/` | Source papers (not tracked) |
 | `cases/` | Generated cases (not tracked) |
 
@@ -24,6 +26,8 @@ scripts/run.sh cases/paper_j1
 python -m pulswave wave cases/paper_j1 1e-4
 ```
 
+Figures: `python paper/figures.py` plots `paper/data` into `paper/figures`; `python -m pulswave figdata <cases> <out>` re-extracts the data from saved fields.
+
 ## Documentation
 
 - [docs/research.md](docs/research.md): the research question, the literature gap and the key papers
@@ -33,9 +37,10 @@ python -m pulswave wave cases/paper_j1 1e-4
 - [docs/assumptions.md](docs/assumptions.md): input values the papers do not state
 - [docs/solver.md](docs/solver.md): solver internals and known pitfalls
 - [docs/status.md](docs/status.md): current state and next steps
+- [docs/experiments.md](docs/experiments.md): the jet-off, pulsed-jet and grid-check experiments and their results
 - [docs/references.md](docs/references.md): every paper and code this work uses
 - [docs/case-spec-open-wedge.md](docs/case-spec-open-wedge.md), [docs/case-spec-confined.md](docs/case-spec-confined.md): the two baseline papers' specifications
 
 ## Acknowledgements
 
-Built on the published work and open-source code listed in [docs/references.md](docs/references.md). Developed with assistance from Claude Opus 5.5 (Anthropic).
+Simulations use [detonationFoam](https://github.com/JieSun-pku/detonationFoam) (Sun et al., Comput. Phys. Commun. 292 (2023) 108859) on OpenFOAM-8. The 44-species n-heptane mechanism files were provided by Huangwei Zhang and Tsingyoung Meng. All published work and code this project builds on is listed in [docs/references.md](docs/references.md). Developed with assistance from Claude Opus 5.5 (Anthropic).
