@@ -19,5 +19,5 @@ All runs used the container in `container/` (OpenFOAM-8 `a86b07b9dabb`, detonati
 
 ## Next steps
 
-1. Make the repository public, archive a release on Zenodo, and put the DOI in the data availability statement and `CITATION.cff`.
+1. Done: release archived on Zenodo, doi:10.5281/zenodo.23676003.
 2. Submit to Physics of Fluids.

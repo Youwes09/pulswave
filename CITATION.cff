@@ -6,6 +6,7 @@ authors:
   - given-names: Yuvan
     family-names: Senthilkumar
     alias: Youwes09
+doi: "10.5281/zenodo.23676003"
 repository-code: "https://github.com/Youwes09/pulswave"
 keywords:
   - oblique detonation wave
