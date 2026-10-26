@@ -39,21 +39,45 @@ def load(kind, name):
         return json.load(f)
 
 
-def base(cases, h=3):
-    """Base x [mm] at height h [mm] against t [us], joined over consecutive cases."""
+def front(*names):
+    """Front per height against t [us], joined over a chain of segments; "old:" segments are in fronts/, the rest in campaign/front/."""
     out = {}
-    for case in cases:
-        for t, rows in load("fronts", case).items():
-            out[float(t)] = next(x for hh, x, *_ in rows if hh == h)
-    ts = sorted(out)
-    return np.array(ts), np.array([out[t] for t in ts])
+    for n in names:
+        if n.startswith("old:"):
+            out.update({float(t): rows for t, rows in load("fronts", n[4:]).items()})
+        else:
+            out.update({float(t) * 1e6: v["front"] for t, v in load("campaign/front", n)["saves"].items()})
+    return {t: {h: x for h, x, *_ in out[t]} for t in sorted(out)}
+
+
+def _median(xs):
+    xs = sorted(x for x in xs if x is not None)
+    return (xs[(len(xs) - 1) // 2] + xs[len(xs) // 2]) / 2 if xs else np.nan
+
+
+def base(*names, h=None):
+    """Base x [mm] against t [us]: the median of the front at y = 4, 5 and 6 mm, or the front at height h."""
+    fr = front(*names)
+    ts = np.array(list(fr))
+    return ts, np.array([_median([f.get(k) for k in (4, 5, 6)]) if h is None else (f.get(h) or np.nan) for f in fr.values()])
+
+
+# case chains, as in scripts/analysis/claims.py
+REF = ("old:box_large", "box_large_200")
+OFF = ("old:large_off", "old:large_off_long")
+CROP_OFF = ("old:crop_grid", "old:crop_grid_off")
+F80 = ("old:large_f80k", "old:large_f80k_long", "large_f80k_200")
+F40 = ("old:large_f40k", "large_f40k_200")
+F30 = ("large_f30k", "large_f30k_200")
+F20 = ("old:large_f20k", "large_f20k_200")
 
 
 def shade(ax, windows, t1):
     """Grey bands over jet-off phases; windows are the jet-on (start, length) pairs, us."""
     edges = [w for s, d in windows for w in (s, s + d)] + [t1]
     for a, b in zip(edges[1::2], edges[2::2]):
-        ax.axvspan(a, min(b, t1), color=LIGHT, lw=0, zorder=0)
+        if a < t1:
+            ax.axvspan(a, min(b, t1), color=LIGHT, lw=0, zorder=0)
 
 
 def pulses(f_khz, duty, t0, t1):
@@ -79,7 +103,7 @@ def fig_validation():
     fig, ax = plt.subplots(figsize=(WIDTH * 0.6, 2.6))
     xs = sorted(int(k) for k in ref)
     ax.errorbar(xs, [ref[str(x)] for x in xs], yerr=1.0, fmt="s", color=INK, ms=4, capsize=2, lw=0.8,
-                label="Wang et al., Fig. 3(c), 100 µs")
+                label="Wang et al., Fig. 3(c), digitized")
     for case, t, color, style, text in (("open_wedge_J1_paper", "100", BLUE, "-", "Full domain, 100 µs"),
                                         ("open_wedge_J1_paper", "90", BLUE, ":", "Full domain, 90 µs"),
                                         ("box_large", "70", ORANGE, "--", "Reduced domain, 70 µs")):
@@ -92,125 +116,149 @@ def fig_validation():
 
 
 def fig_off():
-    fig, axes = plt.subplots(1, 2, figsize=(WIDTH, 2.6), sharex=True)
-    for ax, h in zip(axes, (3, 9)):
-        ax.axvline(70, color=INK, lw=0.6, ls=":")
-        for cases, color, text in ((("box_large",), INK, "Reference"),
-                                   (("large_off", "large_off_long"), ORANGE, "Jet off"),
-                                   (("large_off_dry",), AQUA, "Jet off, dry"),
-                                   (("large_reon",), BLUE, "On again at 95 µs")):
-            t, x = base(cases, h)
-            ax.plot(t, x, color=color, marker="o", ms=3, label=text)
-        ax.axvline(95, color=BLUE, lw=0.6, ls=":")
-        ax.set_title(f"({'a' if h == 3 else 'b'}) $y$ = {h} mm", loc="left")
-        ax.set_xlabel("$t$ (µs)")
-        ax.set_xlim(65, 202)
-        ax.set_ylim(49.5, 62.5)
-    axes[0].set_ylabel("Base $x$ (mm)")
-    axes[0].legend(loc="upper left")
+    fig, axes = plt.subplots(1, 2, figsize=(WIDTH, 2.7))
+    ax = axes[0]
+    for cases, color, marker, text in ((REF, INK, None, "Reference"), (OFF, GREY, "o", "Jet off"),
+                                       (("old:large_off_dry",), AQUA, "^", "Jet off, dry"), (("old:large_reon",), BLUE, "s", "On again at 95 µs")):
+        t, x = base(*cases)
+        keep = t >= 70
+        ax.plot(t[keep], x[keep], color=color, marker=marker, ms=2.5, label=text)
+    for t0, color in ((70, INK), (95, BLUE)):
+        ax.axvline(t0, color=color, lw=0.6, ls=":")
+    ax.set_title("(a) Base after switch-off at 70 µs", loc="left")
+    ax.set_xlabel("$t$ (µs)")
+    ax.set_ylabel("Base $x$ (mm)")
+    ax.set_xlim(65, 202)
+    ax.legend(loc="upper left")
+    ax = axes[1]
+    for cases, cut, color, style, marker, text in ((OFF, 70, GREY, "-", "o", "Reduced, off at 70 µs"),
+                                                   (("large_off_hr",), 165, GREY, "--", None, "Reduced, off at 165 µs"),
+                                                   (("crop_off_hr",), 50, BLUE, "-", None, "Crop, off at 50 µs"),
+                                                   (("old:large_off_dry",), 70, AQUA, "-", "^", "Reduced, dry"),
+                                                   (("crop_off_cut",), 50, AQUA, "--", "s", "Crop, plug removed")):
+        t, x = base(*cases)
+        keep = (t >= cut) & (t <= cut + 40)
+        ax.plot(t[keep] - cut, x[keep] - x[keep][0], color=color, ls=style, marker=marker, ms=3, label=text)
+    ax.axhline(0.3, color=GREY, lw=0.6, ls=":")
+    ax.set_title("(b) Displacement since switch-off", loc="left")
+    ax.set_xlabel("Time after switch-off (µs)")
+    ax.set_ylabel("Base displacement (mm)")
+    ax.set_xlim(0, 40)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.45, -0.2), ncol=2, fontsize=7)
     save(fig, "fig_off")
 
 
+def fig_duty():
+    fig, axes = plt.subplots(1, 2, figsize=(WIDTH, 2.7), sharey=True)
+    tc, xc = base("crop_grid")
+    to, xo = base(*CROP_OFF)
+    for ax, title, series in ((axes[0], "(a) $T_\\mathrm{off}$ = 6.25 µs", (("crop_f80k", BLUE, "o", "$D$ = 0.5, 80 kHz"),
+                                                                         ("crop_d375_100k", AQUA, "^", "$D$ = 0.375, 100 kHz"),
+                                                                         ("crop_d25_120k", ORANGE, "s", "$D$ = 0.25, 120 kHz"))),
+                              (axes[1], "(b) $D$ = 0.25", (("crop_f160k_q", BLUE, "D", "$T_\\mathrm{off}$ = 4.7 µs, 160 kHz"),
+                                                           ("crop_d25_120k", ORANGE, "s", "$T_\\mathrm{off}$ = 6.25 µs, 120 kHz"),
+                                                           ("old:crop_grid_f80k_q", AQUA, "v", "$T_\\mathrm{off}$ = 9.4 µs, 80 kHz")))):
+        ax.plot(tc[(tc >= 40) & (tc <= 50)], xc[(tc >= 40) & (tc <= 50)], color=INK, label="Continuous, to 50 µs")
+        ax.plot(to[to >= 50], xo[to >= 50], color=GREY, lw=1.0, label="Jet off")
+        for name, color, marker, text in series:
+            t, x = base(name)
+            keep = (t >= 50) & (t <= 90)
+            ax.plot(t[keep], x[keep], color=color, marker=marker, ms=2.5, label=text)
+        ax.set_title(title, loc="left")
+        ax.set_xlabel("$t$ (µs)")
+        ax.set_xlim(40, 91)
+        ax.legend(loc="upper left", fontsize=7)
+    axes[0].set_ylabel("Base $x$ (mm)")
+    save(fig, "fig_duty")
+
+
 def fig_pulsed():
-    fig, axes = plt.subplots(3, 1, figsize=(WIDTH, 5.4), sharex=True, sharey=True)
-    tr, xr = base(("box_large",))
-    to, xo = base(("large_off", "large_off_long"))
-    to, xo = to[to <= 145], xo[to <= 145]
-    for ax, (f, cases, tag) in zip(axes, ((80, ("large_f80k", "large_f80k_long"), "a"),
-                                          (40, ("large_f40k",), "b"), (20, ("large_f20k",), "c"))):
-        shade(ax, pulses(f, 0.5, 70, 145), 145)
-        ax.plot(to, xo, color=GREY, lw=1.0, label="Jet off")
+    fig, axes = plt.subplots(4, 1, figsize=(WIDTH, 7.0), sharex=True, sharey=True)
+    tr, xr = base(*REF)
+    to, xo = base(*OFF)
+    for ax, (f, cases, tag) in zip(axes, ((80, F80, "a"), (40, F40, "b"), (30, F30, "c"), (20, F20, "d"))):
+        shade(ax, pulses(f, 0.5, 70, 200), 200)
+        ax.plot(to[to >= 70], xo[to >= 70], color=GREY, lw=1.0, label="Jet off")
         ax.plot(tr[tr >= 70], xr[tr >= 70], color=INK, label="Reference")
-        t, x = base(cases)
-        ax.plot(t, x, color=BLUE, marker="o", ms=3.5, label=f"{f} kHz, $D$ = 0.5")
-        ax.set_title(f"({tag}) {f} kHz, $T_\\mathrm{{off}}$ = {500 / f:g} µs", loc="left")
+        t, x = base(*cases)
+        keep = t >= 70
+        ax.plot(t[keep], x[keep], color=BLUE, marker="o", ms=2.5, label=f"{f} kHz, $D$ = 0.5")
+        ax.set_title(f"({tag}) {f} kHz, $T_\\mathrm{{off}}$ = {500 / f:.3g} µs", loc="left")
         ax.set_ylabel("Base $x$ (mm)")
-        ax.legend(loc="upper left", ncol=3)
+    axes[0].legend(loc="upper left", ncol=3)
     axes[-1].set_xlabel("$t$ (µs)")
-    axes[-1].set_xlim(68, 147)
+    axes[-1].set_xlim(68, 202)
     save(fig, "fig_pulsed")
 
 
-def fig_excursion():
-    pts = []  # excursion as in tab:model: largest minus smallest base x over 95-145 us
-    for f, cases in ((80, ("large_f80k", "large_f80k_long")), (40, ("large_f40k",)), (20, ("large_f20k",))):
-        t, x = base(cases)
-        x = x[(t >= 95) & (t <= 145)]
-        pts.append((500 / f, x.max() - x.min()))
-    fig, ax = plt.subplots(figsize=(WIDTH * 0.6, 2.8))
-    toff = np.linspace(0, 28, 50)
-    ax.fill_between(toff, 0.12 * toff, 0.13 * toff, color=ORANGE, alpha=0.45, lw=0, label="$v_r T_\\mathrm{off}$, $v_r$ = 0.12–0.13 mm/µs")
-    ax.axvspan(12.5, 25, color=LIGHT, lw=0, zorder=0)
-    ax.text(18.75, 0.25, "$f_\\mathrm{cri}$ bracket", ha="center", fontsize=8, color="#52514e")
-    ax.axvline(10, color=INK, lw=0.6, ls=":")
-    ax.text(10.4, 2.3, "$\\tau$", ha="left", fontsize=9)
-    ax.plot(*zip(*pts), "o", color=BLUE, ms=6, label="Simulated, $D$ = 0.5")
-    for (to, dx), f in zip(pts, (80, 40, 20)):
-        ax.annotate(f"{f} kHz", (to, dx), xytext=(5, -2), textcoords="offset points", fontsize=8)
-    ax.set_xlabel("$T_\\mathrm{off}$ (µs)")
-    ax.set_ylabel("Base excursion at $y$ = 3 mm,\n95–145 µs (mm)")
-    ax.set_xlim(0, 28)
-    ax.set_ylim(0, 5.5)
-    ax.legend(loc="upper left")
-    save(fig, "fig_excursion")
+def _late_perf(case):
+    d = load("campaign/performance", case)
+    return {t: v for t, v in d.items() if v["check"]["clean_share"] >= 0.95}
 
 
-def _perf(case, ts):
-    d = load("performance", case)
-    rows = [d[t] for t in ts]
-    return np.mean([r["recovery"] for r in rows]), np.mean([r["burnt_fuel"] for r in rows]) * 1e3
+def _bands():
+    """Burnt and vapour fuel per height band over 150-200 us, from plane_bands_150_200.txt."""
+    out, case = {}, None
+    with open(os.path.join(DATA, "campaign", "plane_bands_150_200.txt")) as f:
+        for line in f:
+            w = line.split()
+            if not w:
+                continue
+            if "saves;" in line:
+                case = w[0]
+                out[case] = []
+            elif "-" in w[0] and case:
+                lo, hi = (float(v) for v in w[0].split("-"))
+                out[case].append((lo, hi, float(w[1]), float(w[2])))
+    return out
 
 
 def fig_performance():
-    late, early = ["125", "130", "135", "140", "145"], ["120", "125", "130"]
-    cases = (("80 kHz", "large_f80k_long", late), ("40 kHz", "large_f40k", late), ("20 kHz", "large_f20k", late),
-             ("Half width", "large_narrow", late), ("Half velocity", "large_half", late), ("Jet off", "large_off", early))
-    dr, db = [], []
-    for _, case, ts in cases:
-        r, b = _perf(case, ts)
-        r0, b0 = _perf("box_large", ts)
-        dr.append(r - r0)
-        db.append(b - b0)
-    fig, axes = plt.subplots(1, 3, figsize=(WIDTH, 2.7), gridspec_kw={"width_ratios": (1, 1, 1.1)})
-    names = [c[0] for c in cases]
-    for ax, vals, noise, title in ((axes[0], dr, 0.002, "(a) Recovery,\ncase − reference"),
-                                   (axes[1], db, 0.04, "(b) Burnt fuel (g/s),\ncase − reference")):
-        y = np.arange(len(vals))
-        ax.axvspan(-noise, noise, color=LIGHT, lw=0)
-        ax.barh(y, vals, color=BLUE, height=0.6)
+    ref = _late_perf("box_large_200")
+    cases = (("80 kHz", "large_f80k_200"), ("80 kHz, restarted", "large_f80k_rep"), ("40 kHz", "large_f40k_200"),
+             ("30 kHz", "large_f30k_200"), ("20 kHz", "large_f20k_200"), ("Half width, cone (lost)", "large_narrow_long"),
+             ("Half width, patch", "large_narrow_patch"), ("Half velocity (lost)", "large_half_long"))
+    fig, axes = plt.subplots(1, 3, figsize=(WIDTH, 2.9), gridspec_kw={"width_ratios": (1, 1, 1.1)})
+    for ax, key, scale, title in ((axes[0], "recovery", 1, "(a) Recovery,\ncase − reference"),
+                                  (axes[1], "burnt_fuel", 1e3, "(b) Burnt fuel (g/s),\ncase − reference")):
+        for i, (_, case) in enumerate(cases):
+            r = _late_perf(case)
+            d = [(r[t][key] - ref[t][key]) * scale for t in r if t in ref]
+            ax.plot(d, [i] * len(d), "o", color=GREY, ms=2.5, alpha=0.7)
+            ax.plot(np.mean(d), i, "D", color=BLUE, ms=5)
         ax.axvline(0, color=INK, lw=0.6)
-        ax.set_yticks(y, names if ax is axes[0] else [])
-        ax.invert_yaxis()
+        ax.set_yticks(range(len(cases)), [c[0] for c in cases] if ax is axes[0] else [])
+        ax.set_ylim(len(cases) - 0.5, -0.5)
         ax.grid(axis="y", visible=False)
         ax.set_title(title, loc="left")
-    for case, color, text in (("box_large", INK, "Reference"), ("large_half", ORANGE, "Half velocity"),
-                              ("large_off", AQUA, "Jet off")):
-        d = load("performance", case)
-        saves = [d[t] for t in early]
-        p0 = np.mean([s["p0_in"] for s in saves])
-        bands = saves[0]["bands"]
-        rec = [sum(s["bands"][i][3] for s in saves) / sum(s["bands"][i][2] for s in saves) / p0 for i in range(len(bands))]
-        mid = [(b[0] + b[1]) / 2 for b in bands]
-        axes[2].plot(rec, mid, color=color, marker="o", label=text)
-    axes[2].set_xlabel("Recovery")
+    for case, color, style, text in (("box_large_200", INK, "-", "Reference"), ("large_f80k_200", BLUE, "-", "80 kHz"),
+                                     ("large_narrow_patch", AQUA, "--", "Half width, patch"), ("large_half_long", ORANGE, ":", "Half velocity")):
+        rows = _bands()[case]
+        rows = rows[:max(i for i, r in enumerate(rows) if r[3] > 0) + 1]
+        axes[2].plot([v / (hi - lo) for lo, hi, _, v in rows for _ in (0, 1)], [y for lo, hi, *_ in rows for y in (lo, hi)],
+                     color=color, ls=style, label=text)
+    axes[2].set_ylim(0, 8)
+    axes[2].set_xlabel("Vapour (g/s per mm of $y$)")
     axes[2].set_ylabel("$y$ (mm)")
-    axes[2].set_title("(c) Recovery by height,\n120–130 µs", loc="left")
-    axes[2].legend(loc="upper right")
+    axes[2].set_title("(c) Unburnt vapour by height", loc="left")
+    axes[2].legend(loc="upper right", fontsize=7)
     save(fig, "fig_performance")
 
 
 def fig_equalfuel():
-    fig, ax = plt.subplots(figsize=(WIDTH, 2.8))
-    for cases, color, lw, text in ((("large_off", "large_off_long"), GREY, 1.0, "Jet off"),
-                                   (("box_large",), INK, 1.4, "Reference (100%)"),
-                                   (("large_half", "large_half_long"), ORANGE, 1.4, "Half velocity, J = 0.25"),
-                                   (("large_narrow",), AQUA, 1.4, "Half width, J = 1"),
-                                   (("large_f80k", "large_f80k_long"), BLUE, 1.4, "80 kHz, $D$ = 0.5")):
-        t, x = base(cases)
+    fig, ax = plt.subplots(figsize=(WIDTH, 3.0))
+    for cases, color, style, text in ((OFF, GREY, "-", "Jet off"), (REF, INK, "-", "Reference"),
+                                      (("old:large_half", "old:large_half_long"), ORANGE, "-", "Half velocity, $J$ = 0.25"),
+                                      (("large_narrow_patch",), AQUA, "-", "Half width, $J$ = 1, patch"),
+                                      (("old:large_narrow", "large_narrow_long"), AQUA, "--", "Half width, $J$ = 1, cone"),
+                                      (F80, BLUE, "-", "80 kHz, $D$ = 0.5")):
+        t, x = base(*cases)
         keep = t >= 70
-        ax.plot(t[keep], x[keep], color=color, lw=lw, marker="o" if color != GREY else None, ms=3, label=text)
+        marker = {ORANGE: "s", BLUE: "o"}.get(color, "^" if style == "-" else "v")
+        ax.plot(t[keep], x[keep], color=color, ls=style, lw=1.0 if color == GREY else 1.4,
+                marker=None if color in (GREY, INK) else marker, ms=2.5, label=text)
     ax.set_xlabel("$t$ (µs)")
-    ax.set_ylabel("Base $x$ at $y$ = 3 mm (mm)")
+    ax.set_ylabel("Base $x$ (mm)")
     ax.set_xlim(68, 202)
     ax.legend(loc="upper left", ncol=2)
     save(fig, "fig_equalfuel")
@@ -218,16 +266,18 @@ def fig_equalfuel():
 
 def fig_grid():
     fig, axes = plt.subplots(1, 2, figsize=(WIDTH, 2.6), sharex=True)
-    for ax, h in zip(axes, (3, 9)):
-        for cases, t0, color, marker, text in ((("large_off",), 70, INK, "s", "Reduced domain, 0.2 mm"),
-                                               (("crop_grid_off",), 50, BLUE, "o", "Crop, 0.2 mm"),
-                                               (("crop_grid_fine_off",), 50, ORANGE, "^", "Crop, 0.15 mm")):
-            t, x = base(cases, h)
+    for ax, h, title in ((axes[0], None, "(a) Base"), (axes[1], 9, "(b) $y$ = 9 mm")):
+        for cases, t0, color, marker, text in ((("old:large_off",), 70, INK, "s", "Reduced domain, 0.2 mm"),
+                                               (("old:crop_grid_off",), 50, BLUE, "o", "Crop, 0.2 mm"),
+                                               (("old:crop_grid_fine_off",), 50, ORANGE, "^", "Crop, 0.15 mm"),
+                                               (("crop_fine_off",), 50, AQUA, None, "Crop, 0.1 mm")):
+            t, x = base(*cases, h=h)
             keep = (t >= t0) & (t <= t0 + 40)
-            ax.plot(t[keep] - t0, x[keep], color=color, marker=marker, ms=4, label=text)
-        ax.set_title(f"({'a' if h == 3 else 'b'}) $y$ = {h} mm", loc="left")
+            ax.plot(t[keep] - t0, x[keep], color=color, marker=marker, ms=3.5, label=text)
+        ax.set_title(title, loc="left")
         ax.set_xlabel("Time after switch-off (µs)")
     axes[0].set_ylabel("Base $x$ (mm)")
+    axes[1].set_ylabel("Front $x$ (mm)")
     axes[0].legend(loc="upper left")
     save(fig, "fig_grid")
 
@@ -246,18 +296,19 @@ def fig_edge():
         t0, e0 = _edges(on)
         t, e = _edges(case)
         t, e = np.r_[t0[-1:], t], {k: np.r_[e0[k][-1:], e[k]] for k in e}
-        tb, xb = base((on, case))
+        tb, xb = base("old:" + on, "old:" + case)
         keep = tb >= 50
         ax = axes[0, col]
         if "f80k" in case:
-            shade(ax, pulses(80, 0.25, 0, 40), 40)
+            for a in axes[:, col]:
+                shade(a, pulses(80, 0.25, 0, 40), 40)
         ax.fill_between(t - 50, e["x5"] * 1e3, e["x50"] * 1e3, color=BLUE, alpha=0.18, lw=0, label="Liquid, 5–50%")
         ax.plot(t - 50, e["x25"] * 1e3, color=BLUE, ls="--", label="Liquid, 25%")
-        ax.plot(tb[keep] - 50, xb[keep], color=INK, marker="o", ms=3, label="Base, $y$ = 3 mm")
+        ax.plot(tb[keep] - 50, xb[keep], color=INK, marker="o", ms=3, label="Base")
         ax.set_title(title, loc="left")
         ax = axes[1, col]
-        ax.plot(t - 50, e["liquid"] * 1e6, color=BLUE, marker="o", ms=3, label="In $y$ < 3 mm")
-        ax.plot(t - 50, e["near_jet"] * 1e6, color=ORANGE, marker="s", ms=3, label="Within 3 mm of jet")
+        ax.plot(t - 50, e["liquid"] * 1e6, color=BLUE, marker="o", ms=3, label="Wall layer")
+        ax.plot(t - 50, e["near_jet"] * 1e6, color=ORANGE, marker="s", ms=3, label="Plug")
         ax.set_xlabel("Time after switch (µs)")
     axes[0, 0].set_ylabel("$x$ (mm)")
     axes[1, 0].set_ylabel("Liquid mass (mg)")
@@ -265,22 +316,6 @@ def fig_edge():
     fig.legend(*axes[1, 0].get_legend_handles_labels(), loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=2)
     axes[0, 0].set_xlim(-1, 41)
     save(fig, "fig_edge")
-
-
-def fig_width():
-    fig, ax = plt.subplots(figsize=(WIDTH * 0.6, 2.7))
-    for on, off, color, text in (("crop_grid", "crop_grid_off", ORANGE, "0.5 mm"), ("crop_grid_d1", "crop_grid_d1_off", BLUE, "1 mm")):
-        tb, xb = base((on, off))
-        keep = tb >= 50
-        ax.plot(tb[keep] - 50, xb[keep] - xb[keep][0], color=color, marker="o", ms=3.5, label=f"{text}, base")
-        t0, e0 = _edges(on)
-        t, e = _edges(off)
-        t, x25 = np.r_[t0[-1:], t], np.r_[e0["x25"][-1:], e["x25"]] * 1e3
-        ax.plot(t - 50, x25 - x25[0], color=color, ls="--", label=f"{text}, liquid 25%")
-    ax.set_xlabel("Time after switch-off (µs)")
-    ax.set_ylabel("Displacement (mm)")
-    ax.legend(loc="upper left")
-    save(fig, "fig_width")
 
 
 SEQ_T = LinearSegmentedColormap.from_list("t", ["#fcfcfb", "#f3b28f", ORANGE, "#8c2f0c", "#2b0e03"])
@@ -318,12 +353,12 @@ def fig_baseline():
     b = axes[2].imshow(g["fuel"], cmap=SEQ_F, vmin=0, vmax=0.6, **im)
     for ax, title, mappable, unit in ((axes[0], "(a) Numerical schlieren", None, None),
                                       (axes[1], "(b) Temperature, droplets (dots), $M$ = 1 (blue)", a, "$T$ (K)"),
-                                      (axes[2], "(c) n-C$_7$H$_{16}$ vapour mass fraction", b, "$Y$")):
+                                      (axes[2], "(c) n-C$_7$H$_{16}$ vapour mass fraction", b, "$Y_\\mathrm{C_7H_{16}}$")):
         ax.set_title(title, loc="left")
         ax.set_ylabel("$y$ (mm)")
         ax.grid(False)
         # the schlieren panel gets a hidden colour bar so that all three panels have the same width
-        cb = fig.colorbar(mappable or ax.images[0], ax=ax, label=unit, fraction=0.025, pad=0.01)
+        cb = fig.colorbar(mappable or ax.images[0], ax=ax, label=unit, fraction=0.025, pad=0.01, extend="max" if mappable else "neither")
         cb.ax.set_visible(mappable is not None)
     axes[-1].set_xlabel("$x$ (mm)")
     save(fig, "fig_baseline")
@@ -341,7 +376,7 @@ def fig_offsnap():
         ax.set_ylabel("$y$ (mm)")
         ax.grid(False)
     axes[-1].set_xlabel("$x$ (mm)")
-    fig.colorbar(im, ax=axes, label="$T$ (K)", fraction=0.02, pad=0.01)
+    fig.colorbar(im, ax=axes, label="$T$ (K)", fraction=0.02, pad=0.01, extend="max")
     save(fig, "fig_offsnap")
 
 
@@ -354,23 +389,21 @@ def fig_schematic():
     """Configuration in the wall-aligned frame: domains, jet, measurement plane, and the published J = 1 front."""
     with open(os.path.join(DATA, "reference.json")) as f:
         ref = sorted((float(x), y) for x, y in json.load(f)["fig3c_front"].items())
-    osw = load("heights", "open_wedge_J1_paper")["100"][0]  # [x, hot, shock] at the first station behind the jet
     fig, (a, b) = plt.subplots(2, 1, figsize=(WIDTH, 6.0), gridspec_kw={"height_ratios": (124 / 274, 34 / 73)})
     for ax in (a, b):
         ax.grid(False)
         ax.set_aspect("equal")
         ax.set_xlabel("$x$ (mm)")
-    # (a) whole configuration; the wedge OSW is drawn at the slope of the computed shock just behind the jet
+    # (a) whole configuration
     a.fill_between([-12, 262], -6, 0, color=LIGHT, lw=0)
     a.plot([-12, 262], [0, 0], color=INK, lw=1.0)
-    _domain(a, 250, 100, GREY, "-", "Full domain, 250 × 100 mm", (249, 101.5))
+    _domain(a, 250, 100, GREY, "-", "Full domain, 250 × 100 mm", (160, 101.5))
     _domain(a, 120, 45, BLUE, "-", "Reduced, 120 × 45 mm", (123, 46.5))
     _domain(a, 100, 25, ORANGE, "--", "Crop, 100 × 25 mm", (103, 26))
-    a.plot([0, osw[0]], [0, osw[2]], color=INK, lw=0.9, ls=":")
     near = [(x, hh) for hh, x, *_ in load("fronts", "open_wedge_J1_paper")["100"] if hh <= 9]
-    a.plot(*zip(*(near + ref)), color=INK, lw=1.6)
-    a.annotate("Wedge OSW", (6, 2.5), fontsize=8, rotation=10)
-    a.annotate("ODW: this work to $y$ = 9 mm,\nthen Ref. Fig. 3c", (185, 74), xytext=(212, 14), fontsize=8, ha="center",
+    a.plot(*zip(*near), color=INK, lw=1.6)
+    a.plot(*zip(*([near[-1]] + ref)), color=INK, lw=1.2, ls="--")
+    a.annotate("ODW: computed to $y$ = 9 mm (solid),\nRef. Fig. 3(c) above (dashed)", (185, 74), xytext=(212, 14), fontsize=8, ha="center",
                arrowprops=dict(arrowstyle="-", color=INK, lw=0.6))
     a.plot([100, 100], [0, 25], color=AQUA, lw=2.4, solid_capstyle="butt")
     for k in range(4):
@@ -383,7 +416,7 @@ def fig_schematic():
     a.set_xlim(-12, 262)
     a.set_ylim(-14, 110)
     a.set_ylabel("$y$ (mm)")
-    a.set_title("(a) Domains and the steady J = 1 front", loc="left")
+    a.set_title("(a) Domains and the $J$ = 1 front", loc="left")
     a.annotate("Measurement\nplane", (102, 2), fontsize=8, color=INK)
     # (b) region near the jet: base heights, jet, crop outlet and measurement plane
     b.fill_between([35, 108], -2, 0, color=LIGHT, lw=0)
@@ -391,11 +424,10 @@ def fig_schematic():
     rows = load("fronts", "box_large")["70"]
     front = [(x, hh) for hh, x, *_ in rows if hh <= 30]
     b.plot(*zip(*front), color=INK, lw=1.6)
-    for hh in (3, 9, 15):
-        x = next(x for h2, x, *_ in rows if h2 == hh)
-        b.plot([35, x], [hh, hh], color=GREY, lw=0.7, ls="--")
-        b.plot(x, hh, "o", color=INK, ms=3.5)
-        b.annotate(f"Base at $y$ = {hh} mm", (x + 1.2, hh - 0.5), fontsize=7.5, color=INK, va="top")
+    xs = [next(x for h2, x, *_ in rows if h2 == hh) for hh in (4, 5, 6)]
+    b.fill_between([35, 108], 4, 6, color=BLUE, alpha=0.12, lw=0)
+    b.plot(xs, (4, 5, 6), "o", color=INK, ms=3.5)
+    b.annotate("Base: median of the front at $y$ = 4–6 mm", (max(xs) + 1.2, 6.6), fontsize=7.5, color=INK, va="bottom")
     b.plot([100, 100], [0, 25], color=AQUA, lw=2.4, solid_capstyle="butt")
     b.annotate("Measurement plane, $x$ = 100 mm", (101.5, 12.5), fontsize=8, rotation=90, va="center")
     b.plot([35, 100], [25, 25], color=ORANGE, lw=1.2, ls="--")
@@ -403,62 +435,15 @@ def fig_schematic():
     b.plot(50, 0, marker="^", color=INK, ms=5, clip_on=False)
     b.annotate("Crop top, $y$ = 25 mm", (36, 25.6), fontsize=8)
     b.set_xlim(35, 110)
-    b.set_ylim(-2, 32)
+    b.set_ylim(-2, 28)
     b.set_ylabel("$y$ (mm)")
-    b.set_title("(b) Near the jet: reduced-domain front at 70 µs, heights at which the base is tracked", loc="left")
+    b.set_title("(b) Near the jet: reduced-domain front at 70 µs and the heights that define the base", loc="left")
     fig.subplots_adjust(hspace=0.32)
     save(fig, "fig_schematic")
 
 
-def _mech_panel(ax, title, jet, layer, base, note=None):
-    """One state of the base: wall, jet, wall liquid layer (x0, x1), detonation base at x = base."""
-    ax.grid(False)
-    ax.set_xlim(-1.5, 13)
-    ax.set_ylim(-0.8, 6.2)
-    ax.set_aspect("equal")
-    ax.axis("off")
-    ax.fill_between([-1.5, 13], -0.8, 0, color=LIGHT, lw=0)
-    ax.plot([-1.5, 13], [0, 0], color=INK, lw=1.0)
-    ax.plot(0, 0, marker="^", color=INK, ms=5, clip_on=False)
-    if jet:
-        ax.annotate("", (0, 2.2), xytext=(0, 0.1), arrowprops=dict(arrowstyle="-|>", color=BLUE, lw=1.4))
-        ax.annotate("Jet on", (0, 2.45), fontsize=8, color=INK, ha="center")
-    else:
-        ax.annotate("Jet off", (0, 2.45), fontsize=8, color=GREY, ha="center")
-    for x0, x1 in layer:
-        xs = np.linspace(x0, x1, 40)
-        ax.fill_between(xs, 0, 0.8 * np.sin(np.pi * (xs - x0) / (x1 - x0)) ** 0.5, color=BLUE, alpha=0.55, lw=0)
-    xb = base
-    ax.plot([xb, xb + 3.2, xb + 7.5], [0, 3.0, 5.6], color=INK, lw=1.8)
-    ax.plot(xb, 0.02, "o", color=INK, ms=4)
-    ax.annotate("Base", (xb, 0), xytext=(xb + 0.35, -0.12), fontsize=7.5, va="top")
-    ax.set_title(title, loc="left", fontsize=8.5)
-    if note:
-        ax.annotate(note, (12.8, 0.9), fontsize=7.5, ha="right", color=INK)
-
-
-def fig_mechanism():
-    """The base follows the upstream end of the wall liquid layer (cartoon; measured values in the labels)."""
-    fig, axes = plt.subplots(2, 2, figsize=(WIDTH, 3.6))
-    _mech_panel(axes[0, 0], "(a) Jet on: liquid layer at the jet,\nbase at the jet", True, [(0.3, 4.0)], 0.0)
-    axes[0, 0].annotate("Wall liquid", (2.2, 0.6), xytext=(4.6, 1.3), fontsize=7.5,
-                        arrowprops=dict(arrowstyle="-", color=INK, lw=0.6))
-    _mech_panel(axes[0, 1], "(b) Off, $t < \\tau \\approx$ 10 µs: layer still\nat the jet, base held", False,
-                [(0.3, 4.0)], 0.0)
-    _mech_panel(axes[1, 0], "(c) Off, $t > \\tau$: layer slides downstream,\nbase follows its upstream end", False,
-                [(2.8, 6.8)], 2.4, note="$v_r \\approx$ 0.12 mm/µs")
-    ax = axes[1, 0]
-    ax.annotate("", (2.4, 0.9), xytext=(0.2, 0.9), arrowprops=dict(arrowstyle="-|>", color=ORANGE, lw=1.2))
-    _mech_panel(axes[1, 1], "(d) Back on: liquid at the jet within 5 µs,\nbase keeps retreating 10–20 µs or more", True,
-                [(0.3, 2.2), (2.8, 6.8)], 2.4)
-    ax = axes[1, 1]
-    ax.annotate("", (0.4, 0.9), xytext=(2.3, 0.9), arrowprops=dict(arrowstyle="-|>", color=AQUA, lw=1.2))
-    fig.subplots_adjust(wspace=0.05, hspace=0.35)
-    save(fig, "fig_mechanism")
-
-
-FIGURES = (fig_schematic, fig_mechanism, fig_validation, fig_off, fig_pulsed, fig_excursion, fig_performance, fig_equalfuel, fig_grid, fig_edge,
-           fig_width, fig_baseline, fig_offsnap)
+FIGURES = (fig_schematic, fig_validation, fig_grid, fig_baseline, fig_off, fig_offsnap, fig_edge, fig_duty, fig_pulsed, fig_equalfuel,
+           fig_performance)
 
 if __name__ == "__main__":
     for fn in FIGURES:

@@ -79,7 +79,9 @@ def _boundary(rows, dx, plane_x=None, y_max=None):
     y1 = max(r["y"] for r in rows)
     y_max = y1 if y_max is None else y_max
     inflow = [(r, r["rho"] * r["ux"] * dx * DEPTH) for r in rows if r["x"] < x0 + 0.5 * dx]
-    top = [(r, -r["rho"] * r["uy"] * dx * DEPTH) for r in rows if r["y"] > y1 - 0.5 * dx]
+    p_inf = sum(r["p"] for r, _ in inflow) / len(inflow)
+    # once the upper front reaches the top boundary, its shocked cells there are not freestream inflow
+    top = [(r, -r["rho"] * r["uy"] * dx * DEPTH) for r in rows if r["y"] > y1 - 0.5 * dx and r["uy"] < 0 and r["p"] < 1.5 * p_inf]
     outflow = [(r, r["rho"] * r["ux"] * dx * DEPTH) for r in rows if abs(r["x"] - x1) < 0.5 * dx and r["y"] < y_max]
     return inflow + top, outflow
 

@@ -2,6 +2,7 @@ import glob
 import json
 import math
 import os
+import re
 import shutil
 from dataclasses import asdict, dataclass, replace
 
@@ -45,6 +46,7 @@ class Setup:
     jet_faces: int = 2
     jet_d: float = JET_D
     jet_scale: float = 1.0
+    gas_wall: str = "slip"
 
     @property
     def jet_rate(self):
@@ -158,7 +160,7 @@ def initial(s):
     out = {
         "T": field("T", "[0 0 0 1 0 0 0]", s.T, s),
         "p": field("p", "[1 -1 -2 0 0 0 0]", s.p, s),
-        "U": field("U", "[0 1 -1 0 0 0 0]", f"({ux:.3f} {uy:.3f} 0)", s, "volVectorField", "slip"),
+        "U": field("U", "[0 1 -1 0 0 0 0]", f"({ux:.3f} {uy:.3f} 0)", s, "volVectorField", s.gas_wall),
     }
     for sp in SPECIES:
         out[sp] = field(sp, "[0 0 0 0 0 0 0]", f"{Y.get(sp, 0.0):.6f}", s)
@@ -350,7 +352,7 @@ def load_setup(case):
     return Setup(**d)
 
 
-def branch(src, dest, time, drop_jet_liquid=False, **changes):
+def branch(src, dest, time, drop_jet_liquid=False, drop_wall_liquid=0.0, **changes):
     parent = load_setup(src)
     s = replace(parent, **changes)
     if os.path.exists(dest):
@@ -364,9 +366,73 @@ def branch(src, dest, time, drop_jet_liquid=False, **changes):
         cloud = os.path.join(dest, name, time, "lagrangian", "sprayCloud")
         if drop_jet_liquid and os.path.exists(os.path.join(cloud, "position0")):
             foam.filter_cloud(cloud, [not (abs(x - JET_X) <= parent.jet_d and y < 1e-4) for x, y, _ in foam.injected_at(cloud)])
-    write(dest, {"constant/sprayCloudProperties": spray_cloud(s, len(parent.jet_windows)), "system/controlDict": control(s),
-                 "setup.json": json.dumps(asdict(s), indent=1)})
+        if drop_wall_liquid and os.path.exists(os.path.join(cloud, "positions")):
+            part = os.path.join(dest, name)
+            foam.filter_cloud(cloud, [not (JET_X - parent.jet_d <= x < drop_wall_liquid and y < 3e-3) for x, y in foam.parcel_xy(part, cloud)])
+        if s.gas_wall != parent.gas_wall:
+            for t in ("0", time):
+                _set_wall(os.path.join(dest, name, t, "U"), s.gas_wall)
+    files = {"system/controlDict": control(s), "setup.json": json.dumps(asdict(s), indent=1)}
+    # injectors are only regenerated (under fresh names) when the jet itself changes; a reused or renamed injector
+    # restarts from stale or missing saved state and re-injects its past mass
+    same = replace(s, end=parent.end, write=parent.write, gas_wall=parent.gas_wall, jet_windows=parent.jet_windows)
+    t = float(time)
+    if same != parent or s.jet_windows not in (parent.jet_windows, truncate_windows(parent.jet_windows, t)):
+        files["constant/sprayCloudProperties"] = spray_cloud(_live_jet(s, parent, t), _next_jet(src, time))
+    elif s.jet_windows != parent.jet_windows:
+        with open(os.path.join(src, "constant", "sprayCloudProperties")) as f:
+            files["constant/sprayCloudProperties"] = _truncate_jets(f.read(), t)
+    write(dest, files)
     return s
+
+
+def _live_jet(s, parent, t):
+    """The jet as regenerated at a branch: windows already over are left out, since under a fresh name they would re-inject
+    their mass. A jet that is off for good keeps the parent's continuous "jet" injector ended at t, or is dropped."""
+    if not s.jet_windows:
+        return s
+    live = tuple((max(t0, t), t0 + dt - max(t0, t)) for t0, dt in s.jet_windows if t0 + dt > t * (1 + 1e-9))
+    if live:
+        return replace(s, jet_windows=live)
+    return replace(s, jet_windows=((0.0, t),)) if not parent.jet_windows else replace(s, jet_u=0.0, jet_windows=())
+
+
+def truncate_windows(windows, t):
+    return tuple((t0, min(dt, t - t0)) for t0, dt in windows if t0 < t)
+
+
+def _truncate_jets(text, t):
+    """End every jet injector at t, keeping its name and with it its saved state."""
+    def cut(m):
+        soi, dur, mass = (float(re.search(rf"{k}\s+(\S+);", m.group(0)).group(1)) for k in ("SOI", "duration", "massTotal"))
+        if soi >= t:
+            return ""
+        if soi + dur <= t:
+            return m.group(0)
+        block = re.sub(r"duration\s+\S+;", f"duration        {t - soi:g};", m.group(0))
+        return re.sub(r"massTotal\s+\S+;", f"massTotal       {mass * (t - soi) / dur:.6g};", block)
+    return re.sub(r"        jet\w*\n        \{.*?\n        \}\n", cut, text, flags=re.S)
+
+
+def _next_jet(src, time):
+    # a reused injector name brings back that injector's saved state, including a stale start time
+    names = set()
+    for f in (os.path.join(src, "constant", "sprayCloudProperties"),
+              os.path.join(src, "processor0", time, "uniform", "lagrangian", "sprayCloud", "sprayCloudOutputProperties")):
+        if os.path.exists(f):
+            with open(f) as fh:
+                names |= {int(i) for i in re.findall(r"^\s+jet(\d+)\s*$", fh.read(), re.M)}
+    return max(names, default=-1) + 1
+
+
+def _set_wall(path, kind):
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        text = f.read()
+    text = re.sub(r"((?:lowerWall|jet)\s*\{\s*type\s+)\w+;", rf"\g<1>{kind};", text)
+    with open(path, "w") as f:
+        f.write(text)
 
 
 def build_ignition(dest, T, p=2.8e5, phi=1.0, end=4e-4):

@@ -17,22 +17,33 @@ def _cells(dx):
     return lambda k: max(1, round(k * 0.2e-3 / dx))
 
 
-def structure(rows, heights_mm=(1, 2, 3, 4, 6, 9, 12, 15, 18, 22, 26, 30, 34, 38), x0=0.035, x1=0.14, dx=0.2e-3):
+def structure(rows, heights_mm=(1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 22, 26, 30, 34, 38), x0=0.035, x1=0.14, dx=0.2e-3, rise=1.5):
+    """Per height: the first shock (pressure rising by `rise` over four cells) with burnt gas (CO + CO2 > 0.02) within five
+    cells behind it, as (y mm, x mm, pressure ratio, shock-to-burnt gap mm); x is None where no reacting front is found."""
     rows_y = _by_row(rows, "y", dx)
+    n = _cells(dx)
     out = []
     for h in heights_mm:
         line = sorted((r for r in rows_y[int(h * 1e-3 / dx + 1e-6)] if x0 < r["x"] < x1), key=lambda r: r["x"])
         if len(line) < 3:
+            out.append((h, None, None, None))
             continue
-        n = _cells(dx)
-        rise = [line[i]["p"] - line[i - n(2)]["p"] if i >= n(2) else 0.0 for i in range(len(line))]
-        shocks = [i for i in range(n(2), len(line)) if rise[i] >= 0.3 * max(rise)]
-        j = next((i for i in shocks if any(r["CO2"] > 0.02 for r in line[i - n(2):i + n(5)])), shocks[0])
+        burnt = [r["CO2"] + r["CO"] > 0.02 for r in line]
+        j = next((i for i in range(n(4), len(line))
+                  if line[i]["p"] >= rise * line[i - n(4)]["p"] and any(burnt[i - n(2):i + n(5)])), None)
+        if j is None:
+            out.append((h, None, None, None))
+            continue
         ratio = max(r["p"] for r in line[j:j + n(10)]) / line[max(j - n(4), 0)]["p"]
-        burn = next((r["x"] for r in line[j - n(2):] if r["CO2"] > 0.02), None)
-        gap = None if burn is None else (burn - line[j]["x"]) * 1e3
-        out.append((h, line[j]["x"] * 1e3, ratio, gap))
+        b = next((k for k in range(j - n(2), len(line)) if burnt[k]), None)
+        out.append((h, line[j]["x"] * 1e3, ratio, None if b is None else (line[b]["x"] - line[j]["x"]) * 1e3))
     return out
+
+
+def base(front, heights_mm=(4, 5, 6)):
+    """Front base: median front position over y = 4-6 mm, which wall flares at y <= 3 mm do not reach."""
+    xs = sorted(x for h, x, *_ in front if h in heights_mm and x is not None)
+    return (xs[(len(xs) - 1) // 2] + xs[len(xs) // 2]) / 2 if xs else None
 
 
 def heights(rows, xs_mm=tuple(FIG3C_FRONT), T_hot=1900.0, dx=0.2e-3):
@@ -83,17 +94,19 @@ def near_jet(rows, parcels, x_jet=0.05):
     }
 
 
-def pocket(rows, parcels, x0=0.0495, x1=0.08, y1=3e-3, dx=0.2e-3, depth=2e-3, rho_l=680.0):
+def pocket(rows, parcels, x0=0.0495, x1=0.08, y1=3e-3, dx=0.2e-3, depth=2e-3):
+    """parcels as foam.parcels(..., extra=("T", "rho"))."""
     grid = {(int(r["x"] / dx), int(r["y"] / dx)): r for r in rows}
-    sel = [(m, d, Td, grid[(int(x / dx), int(y / dx))]) for x, y, d, m, Td in parcels if x0 < x < x1 and y < y1]
+    sel = [(m, d, Td, grid[(int(x / dx), int(y / dx))], m / rho) for x, y, d, m, Td, rho in parcels if x0 < x < x1 and y < y1]
     M = sum(s[0] for s in sel)
+    V = sum(s[4] for s in sel)
     cell = dx * dx * depth
     gas = sum(r["rho"] for r in rows if x0 < r["x"] < x1 and r["y"] < y1) * cell
-    occupied = {id(g): g for *_, g in sel}
+    occupied = {id(g): g for _, _, _, g, _ in sel}
     gas_occupied = sum(g["rho"] for g in occupied.values()) * cell
 
     def avg(f):
-        return sum(m * f(d, Td, g) for m, d, Td, g in sel) / M
+        return sum(m * f(d, Td, g) for m, d, Td, g, _ in sel) / M
 
     return {
         "liquid_kg": M,
@@ -102,12 +115,12 @@ def pocket(rows, parcels, x0=0.0495, x1=0.08, y1=3e-3, dx=0.2e-3, depth=2e-3, rh
         "T_droplet": avg(lambda d, Td, g: Td),
         "T_gas": avg(lambda d, Td, g: g["T"]),
         "C7H16_gas": avg(lambda d, Td, g: g["NXC7H16"]),
-        "liquid_in_hot_gas": sum(m for m, _, _, g in sel if g["T"] > 800) / M,
+        "liquid_in_hot_gas": sum(m for m, _, _, g, _ in sel if g["T"] > 800) / M,
         "mass_loading": M / gas,
-        "volume_fraction": M / rho_l / ((x1 - x0) * y1 * depth),
+        "volume_fraction": V / ((x1 - x0) * y1 * depth),
         "occupied_cells": len(occupied),
         "mass_loading_occupied": M / gas_occupied,
-        "volume_fraction_occupied": M / rho_l / (len(occupied) * cell),
+        "volume_fraction_occupied": V / (len(occupied) * cell),
     }
 
 

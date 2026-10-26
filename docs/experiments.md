@@ -1,5 +1,7 @@
 # Experiments
 
+> Working notes from the runs. Where they differ from the manuscript, the manuscript holds.
+
 The jet-off and pulsed-jet questions are screened in reduced domains ("boxes"), and the grid check and the follow-up options in a smaller crop around the jet. A setting is run on the full domain only once a box shows it works.
 
 ## Ladder

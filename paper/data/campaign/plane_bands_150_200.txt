@@ -1,0 +1,72 @@
+box_large_200 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.137   0.950    2.36
+   1-3    0.335   0.056    3.81
+   3-6    0.365   0.000    5.58
+   6-10   0.397   0.000    7.03
+  10-15   0.339   0.000    6.37
+  15-25   0.788   0.000   12.09
+  total   2.362   1.005  (left out: 0.000 g/s of mass flux in cells with NXC7H16 > 1)
+large_f80k_200 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.059   0.875    1.52
+   1-3    0.260   1.645    4.55
+   3-6    0.410   0.669    5.34
+   6-10   0.368   0.024    5.12
+  10-15   0.368   0.000    6.90
+  15-25   0.747   0.000   11.79
+  total   2.211   3.213  (left out: 0.000 g/s of mass flux in cells with NXC7H16 > 1)
+large_narrow_patch 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.098   1.364    2.37
+   1-3    0.326   0.436    3.90
+   3-6    0.328   0.000    4.46
+   6-10   0.359   0.000    5.86
+  10-15   0.385   0.000    7.36
+  15-25   0.758   0.000   11.99
+  total   2.254   1.801  (left out: 0.000 g/s of mass flux in cells with NXC7H16 > 1)
+large_half_long 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.102   1.557    2.60
+   1-3    0.366   0.510    4.17
+   3-6    0.410   0.003    4.59
+   6-10   0.415   0.000    6.08
+  10-15   0.449   0.000    8.50
+  15-25   0.830   0.000   12.97
+  total   2.572   2.070  (left out: 0.000 g/s of mass flux in cells with NXC7H16 > 1)
+large_f20k_200 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.044   0.284    0.75
+   1-3    0.126   0.258    1.63
+   3-6    0.214   1.558    4.07
+   6-10   0.271   3.166    6.52
+  10-15   0.396   4.410    9.46
+  15-25   1.108   3.555   17.73
+  total   2.159  13.231  (left out: 0.000 g/s of mass flux in cells with NXC7H16 > 1)
+large_f30k_200 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.064   0.819    1.47
+   1-3    0.206   1.777    4.05
+   3-6    0.344   1.821    5.70
+   6-10   0.390   0.471    5.51
+  10-15   0.408   0.479    6.68
+  15-25   0.827   0.425   12.88
+  total   2.239   5.791  (left out: 0.027 g/s of mass flux in cells with NXC7H16 > 1)
+large_f40k_200 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.077   0.820    1.63
+   1-3    0.208   1.113    3.46
+   3-6    0.365   1.151    5.43
+   6-10   0.413   0.323    5.72
+  10-15   0.444   0.014    6.71
+  15-25   0.799   0.000   12.52
+  total   2.307   3.421  (left out: 0.103 g/s of mass flux in cells with NXC7H16 > 1)
+large_f80k_rep 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.059   0.774    1.42
+   1-3    0.261   1.616    4.53
+   3-6    0.407   0.684    5.32
+   6-10   0.370   0.038    5.15
+  10-15   0.373   0.000    6.87
+  15-25   0.751   0.000   11.79
+  total   2.221   3.112  (left out: 0.119 g/s of mass flux in cells with NXC7H16 > 1)
+large_narrow_long 11 saves; y band mm: burnt g/s, vapour g/s, mass g/s
+   0-1    0.121   1.374    2.68
+   1-3    0.366   0.225    4.35
+   3-6    0.416   0.001    5.11
+   6-10   0.416   0.000    6.80
+  10-15   0.381   0.000    7.46
+  15-25   0.787   0.000   12.14
+  total   2.486   1.599  (left out: 0.000 g/s of mass flux in cells with NXC7H16 > 1)

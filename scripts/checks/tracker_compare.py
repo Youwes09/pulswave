@@ -24,9 +24,10 @@ def largest_rise(rows, dx=0.2e-3):
 for case in sys.argv[1:]:
     times = sorted((t for t in os.listdir(os.path.join(case, "processor0")) if t[0].isdigit() and float(t) >= 7e-5), key=float)
     for t in times:
-        rows = foam.load(case, t, ("p", "CO2", "T"))
-        new = {h: x for h, x, *_ in wave.structure(rows, heights_mm=HEIGHTS)}
-        old = largest_rise(rows)
-        changed = [f"{h} mm {old[h]:.1f}->{new[h]:.1f}" for h in HEIGHTS if abs(old[h] - new[h]) > 0.25]
-        print(os.path.basename(case.rstrip("/")), f"{float(t) * 1e6:.0f} us", "current:", " ".join(f"{new[h]:.1f}" for h in HEIGHTS),
+        rows = foam.load(case, t, ("p", "CO2", "CO", "T"))
+        new = {h: x for h, x, *_ in wave.structure(rows, heights_mm=HEIGHTS, dx=foam.cell_size(rows))}
+        old = largest_rise(rows, foam.cell_size(rows))
+        fmt = lambda x: "-" if x is None else f"{x:.1f}"
+        changed = [f"{h} mm {old[h]:.1f}->{fmt(new[h])}" for h in HEIGHTS if new[h] is None or abs(old[h] - new[h]) > 0.25]
+        print(os.path.basename(case.rstrip("/")), f"{float(t) * 1e6:.0f} us", "current:", " ".join(fmt(new[h]) for h in HEIGHTS),
               "| changed:", ", ".join(changed) or "none", flush=True)

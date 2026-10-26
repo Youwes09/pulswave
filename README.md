@@ -1,6 +1,6 @@
 # pulswave
 
-Numerical study of how an oblique detonation wave (ODW) held by a transverse liquid jet responds when the jet is interrupted or pulsed, in a liquid-fuelled oblique detonation engine combustor: how long the front stays anchored after the jet stops, what sets that memory, and the pulse frequency below which the front is no longer held. Benchmarked against a published continuous-jet baseline.
+Two-dimensional Eulerian-Lagrangian study of an n-heptane spray oblique detonation wave (ODW) anchored by a transverse liquid jet when the jet is switched off, pulsed or throttled: how long the base holds after the jet stops, which pulse frequencies and duty cycles keep it held, and whether pulsing or throttling at half the fuel does. Benchmarked against a published continuous-jet baseline.
 
 ## Layout
 
@@ -11,6 +11,8 @@ Numerical study of how an oblique detonation wave (ODW) held by a transverse liq
 | `template/` | Static OpenFOAM dictionaries shared by every case |
 | `pulswave/` | Python package: case builder, analysis and theory checks (`python -m pulswave`) |
 | `scripts/run.sh` | Meshes, decomposes and launches a case |
+| `scripts/campaign/` | Builds and queues the switch-off, pulsing and equal-fuel runs |
+| `scripts/analysis/` | Extractions and the claims ledger (`claims.py`) behind every number in the manuscript |
 | `scripts/checks/` | One-off checks behind statements in the docs (tracker comparison, total pressure against Cantera) |
 | `docs/` | Research context, reproduction steps, validation record and tool reference |
 | `paper/` | Manuscript (`manuscript.tex`), its figures, the data behind them (`data/`) and the script that plots them (`figures.py`) |

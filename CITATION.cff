@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "pulswave: pulsed transverse liquid-jet actuation of oblique detonation waves"
-abstract: "Numerical study of how an oblique detonation wave (ODW) held by a transverse liquid jet responds when the jet is interrupted or pulsed, in a liquid-fuelled oblique detonation engine combustor: how long the front stays anchored after the jet stops, what sets that memory, and the pulse frequency below which the front is no longer held. Benchmarked against a published continuous-jet baseline."
+abstract: "Two-dimensional Eulerian-Lagrangian study of an n-heptane spray oblique detonation wave (ODW) anchored by a transverse liquid jet when the jet is switched off, pulsed or throttled: how long the base holds after the jet stops, which pulse frequencies and duty cycles keep it held, and whether pulsing or throttling at half the fuel does. Benchmarked against a published continuous-jet baseline."
 authors:
   - given-names: Yuvan
     family-names: Senthilkumar

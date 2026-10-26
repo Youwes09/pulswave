@@ -94,21 +94,25 @@ def _run(job):
     return job, KINDS[kind](os.path.join(root, case), t)
 
 
-def jobs(root):
-    for case in FRONT_CASES:
+def jobs(root, only=()):
+    want = lambda case: not only or os.path.basename(case) in only
+    for case in filter(want, FRONT_CASES):
         for t in saves(os.path.join(root, case)):
             yield "fronts", root, case, t
-    for case in EDGE_CASES:
+    for case in filter(want, EDGE_CASES):
         for t in saves(os.path.join(root, case)):
             yield "edges", root, case, t
     for case, ts in HEIGHTS:
-        for t in ts:
-            yield "heights", root, case, t
+        if want(case):
+            for t in ts:
+                yield "heights", root, case, t
     for case, ts in PERF.items():
-        for t in ts:
-            yield "performance", root, case, t
+        if want(case):
+            for t in ts:
+                yield "performance", root, case, t
     for case, t in FIELDS:
-        yield "fields", root, case, t
+        if want(case):
+            yield "fields", root, case, t
 
 
 def _path(out, kind, case, t=None):
@@ -117,7 +121,7 @@ def _path(out, kind, case, t=None):
 
 
 def extract(root, out, only=(), force=False, procs=8):
-    todo = [j for j in jobs(root) if (not only or os.path.basename(j[2]) in only)]
+    todo = list(jobs(root, only))
     if not force:
         todo = [j for j in todo if not os.path.exists(_path(out, j[0], j[2], j[3] if j[0] == "fields" else None))]
     results = {}

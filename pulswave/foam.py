@@ -4,12 +4,10 @@ import os
 import re
 
 ATM = 101325.0
-FIELDS = ("T", "p", "U", "NXC7H16", "O2", "CO2", "H2O")
+FIELDS = ("T", "p", "U", "NXC7H16", "O2", "CO2", "CO", "H2O")
 
 
 def _read(path, n):
-    if not os.path.exists(path):
-        return [0.0] * n
     txt = open(path).read()
     m = re.search(r"internalField\s+nonuniform\s+List<(\w+)>\s*\n\d+\s*\n\(\n(.*?)\n\)\s*;", txt, re.S)
     if m:
@@ -87,15 +85,19 @@ def injected_at(cloud):
     return [tuple(float(v) for v in s.strip("()").split()) for s in _cloud_field(cloud, "position0")]
 
 
-def parcels(case, t, rho_l=680.0, extra=()):
+def parcels(case, t, extra=()):
+    """(x, y, d, mass, *extra) per parcel, with each parcel's own liquid density (hot droplets are lighter than 680 kg/m3)."""
     out = []
     for C, cloud in _clouds(case, t):
-        d = [float(v) for v in _cloud_field(cloud, "d")]
-        n = [float(v) for v in _cloud_field(cloud, "nParticle")]
-        more = [[float(v) for v in _cloud_field(cloud, f)] for f in extra]
-        out += [(C[c][0], C[c][1], di, ni * rho_l * math.pi / 6 * di ** 3, *e)
-                for c, di, ni, *e in zip(_cloud_cells(cloud), d, n, *more)]
+        d, n, rho, *more = ([float(v) for v in _cloud_field(cloud, f)] for f in ("d", "nParticle", "rho") + tuple(extra))
+        out += [(C[c][0], C[c][1], di, ni * ri * math.pi / 6 * di ** 3, *e)
+                for c, di, ni, ri, *e in zip(_cloud_cells(cloud), d, n, rho, *more)]
     return out
+
+
+def parcel_xy(part, cloud):
+    C = _read(os.path.join(part, "0", "C"), 0)
+    return [C[c][:2] for c in _cloud_cells(cloud)]
 
 
 def parcel_cells(case, t):

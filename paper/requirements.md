@@ -1,5 +1,7 @@
 # Manuscript requirements
 
+> Planning spec written before the audits. The paper now targets Physics of Fluids, and its scope was cut to what the data support: no critical frequency and no named mechanism. Where this file differs from the manuscript, the manuscript holds.
+
 Derived from the papers this one sits beside, read in full:
 
 - **[W25]** Wang, Hu & Zhang, arXiv:2506.15247, Aerosp. Sci. Technol. 168 (2026). The baseline we reproduce.

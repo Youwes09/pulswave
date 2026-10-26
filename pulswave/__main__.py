@@ -18,21 +18,29 @@ def cmd_build(a):
 
 def cmd_branch(a):
     t = float(a.time)
-    changes = {"end": a.end, "wall": a.wall}
+    changes = {"end": a.end}
+    if a.wall:
+        changes["wall"] = a.wall
+    if a.write:
+        changes["write"] = a.write
+    if a.no_slip:
+        changes["gas_wall"] = "noSlip"
     if a.jet_u:
         changes["jet_u"] = a.jet_u
     if a.half_width:
         changes["jet_faces"] = 1
+        if not (a.jet_off or a.jet_on or a.pulse):
+            a.jet_on = True
     if a.jet_scale:
         changes["jet_scale"] = a.jet_scale
     if a.jet_off:
-        changes["jet_windows"] = ((0.0, t),)
+        changes["jet_windows"] = build.truncate_windows(build.load_setup(a.src).jet_windows, t) or ((0.0, t),)
     elif a.jet_on:
         changes["jet_windows"] = ((t, a.end - t),)
     elif a.pulse:
         f, duty = a.pulse
         changes["jet_windows"] = build.pulse_windows(f, duty, t, a.end)
-    s = build.branch(a.src, a.dest, a.time, a.drop_jet_liquid, **changes)
+    s = build.branch(a.src, a.dest, a.time, a.drop_jet_liquid, a.drop_wall_liquid, **changes)
     print(f"{a.dest}: restart at {t * 1e6:g} us, end {s.end * 1e6:g} us, jet windows {len(s.jet_windows) or 'continuous'}")
 
 
@@ -56,7 +64,7 @@ def cmd_wave(a):
         cells = []
         for t in a.times:
             _, x, ratio, gap = structs[t][i]
-            cells.append(f"{x:6.1f} {ratio:5.1f}x " + (f"{gap:5.1f}" if gap is not None else "   - "))
+            cells.append("     -        - " if x is None else f"{x:6.1f} {ratio:5.1f}x " + (f"{gap:5.1f}" if gap is not None else "   - "))
         print(f"  y={h:3d}  " + "   ".join(cells))
 
 
@@ -103,7 +111,7 @@ def cmd_nearjet(a):
 
 def cmd_pocket(a):
     rows = foam.load(a.case, a.time, foam.FIELDS + ("rho",))
-    r = wave.pocket(rows, foam.parcels(a.case, a.time, extra=("T",)))
+    r = wave.pocket(rows, foam.parcels(a.case, a.time, extra=("T", "rho")), dx=foam.cell_size(rows))
     print(f"liquid at x = 49.5-80 mm, y < 3 mm: {r['liquid_kg'] * 1e9:.0f} ug in {r['parcels']} parcels, d {r['d'] * 1e6:.2f} um")
     print(f"mass-weighted: droplet T {r['T_droplet']:.0f} K, gas T {r['T_gas']:.0f} K, gas C7H16 {r['C7H16_gas']:.3f};"
           f" liquid in gas above 800 K {r['liquid_in_hot_gas'] * 100:.1f}%")
@@ -226,8 +234,12 @@ def main():
     c.add_argument("dest")
     c.add_argument("time")
     c.add_argument("--end", type=float, required=True)
-    c.add_argument("--wall", choices=("rebound", "escape", "stick"), default="rebound")
+    c.add_argument("--wall", choices=("rebound", "escape", "stick"))
     c.add_argument("--drop-jet-liquid", dest="drop_jet_liquid", action="store_true")
+    c.add_argument("--drop-wall-liquid", dest="drop_wall_liquid", type=float, default=0.0, metavar="X",
+                   help="remove the liquid in y < 3 mm from the jet to x = X (m) at the branch time")
+    c.add_argument("--write", type=float)
+    c.add_argument("--no-slip", dest="no_slip", action="store_true", help="no-slip gas wall from the branch time")
     c.add_argument("--jet-u", dest="jet_u", type=float)
     c.add_argument("--half-width", dest="half_width", action="store_true")
     c.add_argument("--jet-scale", dest="jet_scale", type=float, help="jet mass flow as a fraction of its width's, at unchanged J")

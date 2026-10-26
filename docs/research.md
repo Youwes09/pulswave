@@ -1,5 +1,7 @@
 # Research context
 
+> Working notes from the runs. Where they differ from the manuscript, the manuscript holds.
+
 ## Question
 
 How does an oblique detonation held by a transverse liquid jet respond when the jet is interrupted or pulsed, and what sets how long it stays anchored without the jet?

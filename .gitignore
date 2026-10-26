@@ -16,3 +16,4 @@ aws/
 paper/manuscript.pdf
 paper/*.aux
 paper/*.log
+paper/submission.zip
