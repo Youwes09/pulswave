@@ -12,7 +12,7 @@ Two-dimensional Eulerian-Lagrangian study of an n-heptane spray oblique detonati
 | `pulswave/` | Python package: case builder, analysis and theory checks (`python -m pulswave`) |
 | `scripts/run.sh` | Meshes, decomposes and launches a case |
 | `scripts/campaign/` | Builds and queues the switch-off, pulsing and equal-fuel runs |
-| `scripts/analysis/` | Extractions and the claims ledger (`claims.py`) behind every number in the manuscript |
+| `scripts/analysis/` | Extractions, the claims ledger (`claims.py`) and the performance scripts behind the numbers in the manuscript |
 | `scripts/checks/` | One-off checks behind statements in the docs (tracker comparison, total pressure against Cantera) |
 | `docs/` | Research context, reproduction steps, validation record and tool reference |
 | `paper/` | Manuscript (`manuscript.tex`), its figures, the data behind them (`data/`) and the script that plots them (`figures.py`) |
