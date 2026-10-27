@@ -398,16 +398,16 @@ def fig_schematic():
     a.fill_between([-12, 262], -6, 0, color=LIGHT, lw=0)
     a.plot([-12, 262], [0, 0], color=INK, lw=1.0)
     _domain(a, 250, 100, GREY, "-", "Full domain, 250 × 100 mm", (160, 101.5))
-    _domain(a, 120, 45, BLUE, "-", "Reduced, 120 × 45 mm", (123, 46.5))
+    _domain(a, 120, 45, BLUE, "-", "Reduced, 120 × 45 mm", (22, 46.5))
     _domain(a, 100, 25, ORANGE, "--", "Crop, 100 × 25 mm", (103, 26))
     near = [(x, hh) for hh, x, *_ in load("fronts", "open_wedge_J1_paper")["100"] if hh <= 9]
     a.plot(*zip(*near), color=INK, lw=1.6)
     a.plot(*zip(*([near[-1]] + ref)), color=INK, lw=1.2, ls="--")
-    a.annotate("ODW: computed to $y$ = 9 mm (solid),\nRef. Fig. 3(c) above (dashed)", (185, 74), xytext=(212, 14), fontsize=8, ha="center",
+    a.annotate("ODW: computed to\n$y$ = 9 mm (solid),\nRef. Fig. 3(c) (dashed)", (185, 74), xytext=(207, 6), fontsize=8, ha="center", va="bottom",
                arrowprops=dict(arrowstyle="-", color=INK, lw=0.6))
     a.plot([100, 100], [0, 25], color=AQUA, lw=2.4, solid_capstyle="butt")
     for k in range(4):
-        y = 30 + 18 * k
+        y = 28 + 14 * k
         a.annotate("", (16, y - 8.2), xytext=(0, y), arrowprops=dict(arrowstyle="-|>", color=GREY, lw=0.9))
     a.annotate("Inflow, 27° to the wall\n2535 m/s, droplets", (3, 97), fontsize=8, va="top", color=INK)
     a.annotate("Jet, $x$ = 50 mm", (44, -5), fontsize=8, va="top")
