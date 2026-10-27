@@ -149,6 +149,10 @@ The liquid near the wall is dense. Over $x = 49.5$--80~mm, $y < 3$~mm it occupie
 
 The upper front reaches the upper boundary of the reduced domain after 135--150\us; in the jet-off and 20~kHz runs the meeting point then moves upstream, to $x \approx 95$~mm by 200\us. The subsonic regions behind the front stay below $y \approx 30$~mm and are separated from that boundary by supersonic flow, so the boundary cannot influence the base, and its shocked part is excluded from the inflow total pressure.
 
+\subsection{Use of AI tools}\label{sec:ai}
+
+Claude (Anthropic; Claude Opus models, including Claude Opus 5.5), used through Claude Code, wrote and checked parts of the case-generation, analysis and plotting scripts, operated the cloud runs and searched the literature, to speed up these tasks; it was also used to revise the language of the manuscript. All data come from the simulations, and all figures and numbers from the scripts; none was generated or edited directly by the tool. The author reviewed and verified the code, the numbers and the text, and checked every reference against its source.
+
 \section{Results}\label{sec:results}
 
 \subsection{The jet-anchored front}\label{sec:baseline}
@@ -284,7 +288,7 @@ Two-dimensional Eulerian--Lagrangian simulations of an \nh\ spray ODW anchored b
 \end{enumerate}
 
 \begin{acknowledgments}
-The author thanks Huangwei Zhang (National University of Singapore) and Tsingyoung Meng (The Hong Kong Polytechnic University) for the 44-species \nh\ mechanism files. The simulations were run on rented Amazon Web Services EC2 c7a.4xlarge (16 vCPUs, 32~GiB) and c7a.8xlarge (32 vCPUs, 64~GiB) instances. This work received no external funding. The author used Claude (Anthropic; Claude Opus models, including Claude Opus 5.5) to write and check parts of the case-generation, analysis and plotting scripts, to operate the cloud runs, to search the literature, and to review and revise the language of the manuscript. All data come from the simulations, and all figures and numbers from the scripts; none was generated or edited directly by the tool, and every reference was checked against its source. The author directed the study, chose the cases and their interpretation, verified the code, numbers and text, and takes full responsibility for the content.
+The author thanks Huangwei Zhang (National University of Singapore) and Tsingyoung Meng (The Hong Kong Polytechnic University) for the 44-species \nh\ mechanism files. The simulations were run on rented Amazon Web Services EC2 c7a.4xlarge (16 vCPUs, 32~GiB) and c7a.8xlarge (32 vCPUs, 64~GiB) instances. This work received no external funding. The use of AI tools is described in Sec.~\ref{sec:ai}. The author directed the study, chose the cases and their interpretation, and takes full responsibility for the content.
 \end{acknowledgments}
 
 \section*{Author declarations}
@@ -398,13 +402,13 @@ The data that support the findings of this study are openly available in Zenodo 
 
 \bibitem{Rosin1933} P. Rosin and E. Rammler, ``The laws governing the fineness of powdered coal,'' J. Inst. Fuel \textbf{7}, 29--36 (1933).
 
-\bibitem{Cantera} D. G. Goodwin, H. K. Moffat, I. Schoegl, R. L. Speth, and B. W. Weber, ``Cantera: An object-oriented software toolkit for chemical kinetics, thermodynamics, and transport processes,'' Version 3.2.0, doi:10.5281/zenodo.17620923 (2025).
+\bibitem{Cantera} D. G. Goodwin, H. K. Moffat, I. Schoegl, R. L. Speth, and B. W. Weber, ``Cantera: An object-oriented software toolkit for chemical kinetics, thermodynamics, and transport processes,'' Version 3.2.0, \url{https://doi.org/10.5281/zenodo.17620923} (2025).
 
 \bibitem{Guo2023pci} H. Guo, Y. Xu, H. Zheng, and H. Zhang, ``Ignition limit and shock-to-detonation transition mode of n-heptane/air mixture in high-speed wedge flows,'' Proc. Combust. Inst. \textbf{39}, 4771--4780 (2023).
 
 \bibitem{Elghobashi1994} S. Elghobashi, ``On predicting particle-laden turbulent flows,'' Appl. Sci. Res. \textbf{52}, 309--329 (1994).
 
-\bibitem{NIST} P. J. Linstrom and W. G. Mallard (Eds.), \textit{NIST Chemistry WebBook, NIST Standard Reference Database 69} (National Institute of Standards and Technology, Gaithersburg, MD), doi:10.18434/T4D303 (accessed 2026).
+\bibitem{NIST} P. J. Linstrom and W. G. Mallard (Eds.), \textit{NIST Chemistry WebBook, NIST Standard Reference Database 69} (National Institute of Standards and Technology, Gaithersburg, MD), \url{https://doi.org/10.18434/T4D303} (accessed 2026).
 
 \bibitem{Spalding1953} D. B. Spalding, ``The combustion of liquid fuels,'' Symp. (Int.) Combust. \textbf{4}, 847--864 (1953).
 
@@ -414,9 +418,9 @@ The data that support the findings of this study are openly available in Zenodo 
 
 \bibitem{Karagozian2010} A. R. Karagozian, ``Transverse jets and their control,'' Prog. Energy Combust. Sci. \textbf{36}, 531--553 (2010).
 
-\bibitem{Zenodo2026} Y. Senthilkumar, ``pulswave: Code and data for liquid-jet-anchored oblique detonation under jet interruption, pulsing and throttling,'' Zenodo, doi:10.5281/zenodo.23676003 (2026).
+\bibitem{Zenodo2026} Y. Senthilkumar, ``pulswave: Code and data for liquid-jet-anchored oblique detonation under jet interruption, pulsing and throttling,'' Zenodo, \url{https://doi.org/10.5281/zenodo.23676003} (2026).
 
-\bibitem{Zenodo2026fields} Y. Senthilkumar, ``pulswave simulation fields and containers: liquid-jet-anchored oblique detonation under jet interruption, pulsing and throttling,'' Zenodo, doi:10.5281/zenodo.23676091 (2026).
+\bibitem{Zenodo2026fields} Y. Senthilkumar, ``pulswave simulation fields and containers: liquid-jet-anchored oblique detonation under jet interruption, pulsing and throttling,'' Zenodo, \url{https://doi.org/10.5281/zenodo.23676091} (2026).
 
 \end{thebibliography}
 

@@ -144,7 +144,7 @@ def fig_off():
     ax.set_xlabel("Time after switch-off (µs)")
     ax.set_ylabel("Base displacement (mm)")
     ax.set_xlim(0, 40)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.45, -0.2), ncol=2, fontsize=7)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.45, -0.2), ncol=2, fontsize=8)
     save(fig, "fig_off")
 
 
@@ -167,7 +167,7 @@ def fig_duty():
         ax.set_title(title, loc="left")
         ax.set_xlabel("$t$ (µs)")
         ax.set_xlim(40, 91)
-        ax.legend(loc="upper left", fontsize=7)
+        ax.legend(loc="upper left", fontsize=8)
     axes[0].set_ylabel("Base $x$ (mm)")
     save(fig, "fig_duty")
 
@@ -197,7 +197,7 @@ def _late_perf(case):
 
 
 def _bands():
-    """Burnt and vapour fuel per height band over 150-200 us, from plane_bands_150_200.txt."""
+    """Burnt and vapor fuel per height band over 150-200 us, from plane_bands_150_200.txt."""
     out, case = {}, None
     with open(os.path.join(DATA, "campaign", "plane_bands_150_200.txt")) as f:
         for line in f:
@@ -238,10 +238,10 @@ def fig_performance():
         axes[2].plot([v / (hi - lo) for lo, hi, _, v in rows for _ in (0, 1)], [y for lo, hi, *_ in rows for y in (lo, hi)],
                      color=color, ls=style, label=text)
     axes[2].set_ylim(0, 8)
-    axes[2].set_xlabel("Vapour (g/s per mm of $y$)")
+    axes[2].set_xlabel("Vapor (g/s per mm of $y$)")
     axes[2].set_ylabel("$y$ (mm)")
-    axes[2].set_title("(c) Unburnt vapour by height", loc="left")
-    axes[2].legend(loc="upper right", fontsize=7)
+    axes[2].set_title("(c) Unburnt vapor by height", loc="left")
+    axes[2].legend(loc="upper right", fontsize=8)
     save(fig, "fig_performance")
 
 
@@ -353,7 +353,7 @@ def fig_baseline():
     b = axes[2].imshow(g["fuel"], cmap=SEQ_F, vmin=0, vmax=0.6, **im)
     for ax, title, mappable, unit in ((axes[0], "(a) Numerical schlieren", None, None),
                                       (axes[1], "(b) Temperature, droplets (dots), $M$ = 1 (blue)", a, "$T$ (K)"),
-                                      (axes[2], "(c) n-C$_7$H$_{16}$ vapour mass fraction", b, "$Y_\\mathrm{C_7H_{16}}$")):
+                                      (axes[2], "(c) n-C$_7$H$_{16}$ vapor mass fraction", b, "$Y_\\mathrm{C_7H_{16}}$")):
         ax.set_title(title, loc="left")
         ax.set_ylabel("$y$ (mm)")
         ax.grid(False)
@@ -427,7 +427,7 @@ def fig_schematic():
     xs = [next(x for h2, x, *_ in rows if h2 == hh) for hh in (4, 5, 6)]
     b.fill_between([35, 108], 4, 6, color=BLUE, alpha=0.12, lw=0)
     b.plot(xs, (4, 5, 6), "o", color=INK, ms=3.5)
-    b.annotate("Base: median of the front at $y$ = 4–6 mm", (max(xs) + 1.2, 6.6), fontsize=7.5, color=INK, va="bottom")
+    b.annotate("Base: median of the front at $y$ = 4–6 mm", (max(xs) + 1.2, 6.6), fontsize=8, color=INK, va="bottom")
     b.plot([100, 100], [0, 25], color=AQUA, lw=2.4, solid_capstyle="butt")
     b.annotate("Measurement plane, $x$ = 100 mm", (101.5, 12.5), fontsize=8, rotation=90, va="center")
     b.plot([35, 100], [25, 25], color=ORANGE, lw=1.2, ls="--")

@@ -1,3 +1,5 @@
+> Not for upload: Physics of Fluids does not accept cover letters (AIP author instructions). Kept as a summary of the submission.
+
 Dear Editor,
 
 Please consider the enclosed manuscript, "Response of a liquid-jet-anchored oblique detonation to jet interruption, pulsing and throttling," for publication in Physics of Fluids as a regular article.

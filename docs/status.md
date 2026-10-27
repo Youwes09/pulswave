@@ -4,7 +4,7 @@ Last updated 2026-10-26.
 
 ## Where things stand
 
-The manuscript is final for submission to Physics of Fluids: [paper/manuscript.tex](../paper/manuscript.tex), with the cover letter in [paper/cover_letter.md](../paper/cover_letter.md). Its numbers are reproduced by the scripts in [scripts/analysis/](../scripts/analysis/): `claims.py` for fronts, holds and pulsing, and `performance_table.py` and `plane_bands.py` for Table II. [experiments.md](experiments.md) and [research.md](research.md) are the working notes from the runs; where they differ from the manuscript, the manuscript holds.
+The manuscript is final for submission to Physics of Fluids: [paper/manuscript.tex](../paper/manuscript.tex), with alt text for the portal in [paper/alt_text.md](../paper/alt_text.md). Its numbers are reproduced by the scripts in [scripts/analysis/](../scripts/analysis/): `claims.py` for fronts, holds and pulsing, and `performance_table.py` and `plane_bands.py` for Table II. [experiments.md](experiments.md) and [research.md](research.md) are the working notes from the runs; where they differ from the manuscript, the manuscript holds.
 
 - **Validation:** the solver, chemistry and setup reproduce theory, two published cases, and the open-wedge paper's vapor, no-jet and J = 1 cases. Near the jet the J = 1 front lies 0.5–2.8 mm below the published one.
 - **Jet off:** the detonation survives the 130 µs simulated. The base holds for 11.5–20 µs, about one flow-through time behind the front, then retreats at 0.07–0.10 mm/µs. About 10 µs of the hold remains with no jet liquid.
