@@ -1,6 +1,6 @@
 # Status
 
-Last updated 2026-10-26.
+Last updated 2026-10-27.
 
 ## Where things stand
 
@@ -20,4 +20,5 @@ All runs used the container in `container/` (OpenFOAM-8 `a86b07b9dabb`, detonati
 ## Next steps
 
 1. Done: code on Zenodo, doi:10.5281/zenodo.23676003; fields and containers, doi:10.5281/zenodo.23676091 (boxes.tar.zst and new_runs_2.tar.zst still to be added as a new version).
-2. Submit to Physics of Fluids.
+2. Done: submitted to Physics of Fluids on 2026-10-27, POF26-AR-16569 (conventional publication, no charges).
+3. Post to arXiv (physics.flu-dyn) once the parent/guardian consent form is done, or after March 2027.
