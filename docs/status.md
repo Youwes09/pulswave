@@ -19,5 +19,5 @@ All runs used the container in `container/` (OpenFOAM-8 `a86b07b9dabb`, detonati
 
 ## Next steps
 
-1. Done: release archived on Zenodo, doi:10.5281/zenodo.23676003.
+1. Done: code on Zenodo, doi:10.5281/zenodo.23676003; fields and containers, doi:10.5281/zenodo.23676091 (boxes.tar.zst and new_runs_2.tar.zst still to be added as a new version).
 2. Submit to Physics of Fluids.
