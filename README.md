@@ -45,4 +45,4 @@ Figures: `python paper/figures.py` plots `paper/data` into `paper/figures`; `pyt
 
 ## Acknowledgements
 
-Simulations use [detonationFoam](https://github.com/JieSun-pku/detonationFoam) (Sun et al., Comput. Phys. Commun. 292 (2023) 108859) on OpenFOAM-8. The 44-species n-heptane mechanism files were provided by Huangwei Zhang and Tsingyoung Meng. All published work and code this project builds on is listed in [docs/references.md](docs/references.md). Developed with assistance from Claude Opus 5.5 (Anthropic).
+Simulations use [detonationFoam](https://github.com/JieSun-pku/detonationFoam) (Sun et al., Comput. Phys. Commun. 292 (2023) 108859) on OpenFOAM-8. The 44-species n-heptane mechanism files were provided by Tsingyoung Meng. All published work and code this project builds on is listed in [docs/references.md](docs/references.md). Developed with assistance from Claude Opus 5.5 (Anthropic).
