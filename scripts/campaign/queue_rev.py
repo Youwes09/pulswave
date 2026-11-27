@@ -1,8 +1,9 @@
 """Revision run queue: keeps the host's cores busy with the jobs in queue_rev.json, without supervision.
 
-Each job: {"name", "ranks", "needs": [case, time] or [case, "End"] or null}. A job is built (scripts/campaign/build_revision.py)
+Each job: {"name", "ranks", "needs": [case, time] or [case, "End"] or null, optional "gate": [script, args...]}. A job is built (scripts/campaign/build_revision.py)
 when its parent condition is met and launched when enough cores are free. Before launch it must pass the injector audit;
-three minutes after launch its log is checked for errors and for steps. Every action goes to ~/queue_rev.log.
+three minutes after launch its log is checked for errors and for steps. A job with a gate is built only once the gate
+script (run with python3 from the repo) exits 0; it is re-tried every 30 min. Every action goes to ~/queue_rev.log.
 Cancel: touch ~/queue.cancel. Edit the job list by writing a new queue_rev.json; it is re-read every cycle.
 Usage: nohup setsid python3 scripts/campaign/queue_rev.py > /dev/null 2>&1 &
 """
@@ -98,6 +99,14 @@ while not os.path.exists(os.path.join(HOME, "queue.cancel")):
             continue
         if st != "pending" or not ready(j.get("needs")):
             continue
+        if j.get("gate") and not os.path.isdir(os.path.join(B, name)):
+            if time.time() - state.get(name + ".gate", 0) < 1800:
+                continue
+            state[name + ".gate"] = time.time()
+            g = subprocess.run(["python3"] + j["gate"], cwd=REPO, capture_output=True, text=True)
+            log(f"gate {name}: {g.stdout.strip()[-200:]} -> {'pass' if g.returncode == 0 else 'hold'}")
+            if g.returncode:
+                continue
         if running(name) or done(name):
             state[name] = "running" if running(name) else "done"
             log(f"{name} already {state[name]}, not launched again")

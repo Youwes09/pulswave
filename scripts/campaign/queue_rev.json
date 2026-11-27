@@ -54,6 +54,20 @@
   ]
  },
  {
+  "name": "r_f15box_f80k",
+  "ranks": 24,
+  "needs": [
+   "r_f15box_cont",
+   "9.1e-05"
+  ],
+  "gate": [
+   "scripts/checks/settled.py",
+   "r_f15box_cont",
+   "80",
+   "90"
+  ]
+ },
+ {
   "name": "r_box_f50k",
   "ranks": 8,
   "needs": null
