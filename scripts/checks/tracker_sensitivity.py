@@ -1,7 +1,8 @@
 """Front positions at y = 2-9 mm for every variant of the tracker thresholds, per save.
 
 Variants: pressure factor 1.3 / 1.5 / 2.0 (burnt-gas cutoff 0.02); burnt-gas cutoff 0.01 / 0.05 (factor 1.5);
-temperature fronts at 1500 K and 1900 K. One JSON per case in $OUT (default tracker/), resumable.
+temperature fronts at 1500 K and 1900 K, as the first hot cell (T1500, T1900) and as the first cell
+that stays hot over the next 2 mm (T1500s, T1900s). One JSON per case in $OUT (default tracker/), resumable.
 Usage (run host): OUT=~/tracker python3 scripts/checks/tracker_sensitivity.py case [case ...]
 """
 import json, os, sys
@@ -23,6 +24,7 @@ def one(job):
            for k, (r, c) in VARIANTS.items()}
     for T in (1500, 1900):
         rec[f"T{T}"] = [[h, x] for h, x in wave.front_T(rows, T, heights_mm=H, dx=dx)]
+        rec[f"T{T}s"] = [[h, x] for h, x in wave.front_T(rows, T, heights_mm=H, dx=dx, sustain_mm=2.0)]
     return t, rec
 
 
@@ -36,7 +38,7 @@ if __name__ == "__main__":
     for name in sys.argv[1:]:
         case, path = os.path.join(B, name), os.path.join(OUT, name + ".json")
         done = json.load(open(path)) if os.path.exists(path) else {}
-        todo = [(case, t) for t in saves(case) if t not in done]
+        todo = [(case, t) for t in saves(case) if t not in done or "T1500s" not in done[t]]
         with Pool(int(os.environ.get("NP", "6"))) as pool:
             for t, rec in pool.imap_unordered(one, todo):
                 done[t] = rec

@@ -80,11 +80,15 @@ JOBS = {
     "r_box_f20k_p75":   ("r_box_ref", "7.5e-05", dict(end=3.5e-4, jet_windows=((0.0, 75e-6),) + pw(20e3, 0.5, 75e-6, 3.5e-4)),
                          {"extend_injectors": 3.6e-4}),
     # default ODE tolerances (1e-15, 1e-4) over the 80 kHz loss: near-wall burning fades from 145 us and the base leaves at 155 us
+    "r_box_f80k_p71_ext": ("r_box_f80k_p71", "0.0002", dict(end=2.6e-4, jet_windows=((0.0, 71e-6),) + pw(80e3, 0.5, 71e-6, 2.6e-4)), {}),
+    "r_box_f80k_p73_ext": ("r_box_f80k_p73", "0.0002", dict(end=2.6e-4, jet_windows=((0.0, 73e-6),) + pw(80e3, 0.5, 73e-6, 2.6e-4)), {}),
+    # default ODE tolerances over the whole 80 kHz run, so an effect that builds up over 70-140 us is not missed
+    "r_box_f80k_tolfull": ("box_large", "7e-05", dict(end=2.0e-4, jet_windows=pw(80e3, 0.5, R0, 2.0e-4)), {"tol": ("1e-15", "1e-4")}),
     "r_box_f80k_tolctl": ("r_box_f80k", "0.00014", dict(end=1.75e-4, jet_windows=pw(80e3, 0.5, R0, 1.75e-4)), {"tol": ("1e-15", "1e-4")}),
     # lowest frequency: 50 us off-time, more than three times the hold after switch-off
-    "r_box_f10k":       ("box_large", "7e-05", dict(end=3.0e-4, jet_windows=pw(10e3, 0.5, R0, 3.0e-4)), {}),
+    "r_box_f10k":       ("box_large", "7e-05", dict(end=3.7e-4, jet_windows=pw(10e3, 0.5, R0, 3.7e-4)), {"extend_injectors": 3.8e-4}),
     # reduced domain on 0.15 mm (mapped at 70 us by f15box_cont); branched once its base has settled (see experiments.md)
-    "r_f15box_f80k":    ("r_f15box_cont", "9e-05", dict(end=2.0e-4, jet_windows=pw(80e3, 0.5, 9e-5, 2.0e-4)), {}),
+    "r_f15box_f80k":    ("r_f15box_cont", "9e-05", dict(end=2.2e-4, jet_windows=pw(80e3, 0.5, 9e-5, 2.2e-4)), {}),
     # the reduced domain cut to the crop's height, 120 x 25 mm (mapped at 70 us by low_box)
     "r_low_f80k":       ("r_low_cont", "7e-05", dict(end=2.0e-4, jet_windows=pw(80e3, 0.5, R0, 2.0e-4)), {}),
 }

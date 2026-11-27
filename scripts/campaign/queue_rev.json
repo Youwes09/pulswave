@@ -116,6 +116,11 @@
   ]
  },
  {
+  "name": "r_box_f80k_tolfull",
+  "ranks": 8,
+  "needs": null
+ },
+ {
   "name": "r_f15box_f80k",
   "ranks": 24,
   "needs": [
@@ -127,6 +132,22 @@
    "r_f15box_cont",
    "80",
    "90"
+  ]
+ },
+ {
+  "name": "r_box_f80k_p71_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_f80k_p71",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f80k_p73_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_f80k_p73",
+   "End"
   ]
  },
  {

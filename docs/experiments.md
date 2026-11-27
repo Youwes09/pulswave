@@ -570,22 +570,24 @@ The cases are built by `scripts/campaign/build_revision.py` and run by `scripts/
 | `r_box_f50k`, `r_box_f60k` | Threshold frequency at 50% duty, in the domain used for long-time outcomes |
 | `r_box_q120k` | Duty-cycle result (50% against 25% at an off-time of 6.25 µs) in the reduced domain |
 | `r_box_f80k_ext`, `r_box_ref_ext` | 80 kHz and reference to 350 µs |
-| `r_box_f80k_p71`, `r_box_f80k_p73` | 80 kHz with pulsing started 1 and 3 µs later, from the reference's saves: does the late outcome depend on the start? |
+| `r_box_f80k_p71`, `r_box_f80k_p73` (and `_ext` to 260 µs) | 80 kHz with pulsing started 1 and 3 µs later, from the reference's saves: does the time of loss depend on the pulse phase? These are phase-shift runs, not independent realizations |
 | `r_box_f20k_ext`, `r_box_f30k_ext`, `r_box_f20k_p75` | 20 and 30 kHz to 350 µs, and 20 kHz started 5 µs later: does the recapture stay bounded? |
-| `r_box_f10k` | 10 kHz to 300 µs: an off-time of 50 µs, more than three times the hold |
-| `r_box_f80k_tolctl` | 80 kHz at the solver's default ODE tolerances over 140–175 µs, where the 80 kHz base is lost |
+| `r_box_f10k` | 10 kHz to 370 µs: an off-time of 50 µs, more than three times the hold |
+| `r_box_f80k_tolctl`, `r_box_f80k_tolfull` | 80 kHz at the solver's default ODE tolerances, over 140–175 µs (restart from `r_box_f80k`) and over the whole run from 70 µs |
 | `r_crop_*` (switch-off, 50% / 37.5% / 25% duty, plug removed, 1 mm jet, wall treatments) | Crop cases on the patched solver, within the crop's window (below) |
 | `r_crop_*_co15` | Courant number 0.15 against 0.3 |
 | `r_crop_off_tolctl` | Default ODE tolerances over the hold |
 | `r_crop_*_s40`, `r_crop_*_s45` | Realizations: restarts from 40 and 45 µs, so the droplet models' random sequence restarts at a different time |
 | `r_f15_*`, `r_f10_*` | Crop on 0.15 and 0.1 mm |
-| `r_f15box_cont`, `r_f15box_f80k` | Reduced domain on 0.15 mm, mapped at 70 µs: 80 kHz against its own continuous jet to 200 µs |
+| `r_f15box_cont`, `r_f15box_f80k` | Reduced domain on 0.15 mm, mapped at 70 µs: 80 kHz from 90 µs against its own continuous jet, to 220 µs (130 µs of pulsing, as in `r_box_f80k`) |
 | `r_low_cont`, `r_low_f80k` | Reduced domain cut to the crop's height (120 × 25 mm), mapped at 70 µs: does the crop's height cause its late drift? |
 | `r_full_j1` | Full domain from uniform freestream, for the comparison with the published J = 1 front |
 
 ### Analysis criteria
 
 The criteria below were fixed on 2026-11-27. At that time `r_box_f50k`, `r_box_f60k`, `r_box_q120k`, `r_low_*`, `r_f15box_*`, the realizations, `r_f15_*`, `r_f10_off`, `r_f10_f40k` and all queued runs had no results. They are applied to those runs unchanged. Any later change is listed at the end of this section, and the result under the original criterion is reported too.
+
+What was known when they were fixed (commit `edafff6`, 08:03 UTC): `r_box_f80k`, `r_box_f40k` and `r_box_f20k` had reached about 155 µs. The 40 kHz retreat (offset about 4 mm) and the 20 kHz excursions were visible; the 80 kHz loss, which starts at 155 µs, was not.
 
 **Quantities.** These are unchanged from the manuscript:
 - front at height y: the pressure factor of 1.5 over 0.8 mm, with CO + CO₂ > 0.02 nearby;
@@ -608,6 +610,8 @@ Drift is the least-squares slope of the offset over the last 50 µs of a run, wi
 - a temperature front at 1500 K or 1900 K;
 - drift window 30, 50 or 70 µs.
 
+The hold threshold enters the holds only, not the classes.
+
 The tools are `scripts/checks/tracker_sensitivity.py` and `scripts/checks/sensitivity.py`.
 
 **Crop window.** Crop results are used up to 40 µs after the change, the window over which the crop was measured to agree with the reduced domain (below). Outcomes beyond 40 µs come from the reduced domain.
@@ -616,6 +620,8 @@ The tools are `scripts/checks/tracker_sensitivity.py` and `scripts/checks/sensit
 - `r_low_f80k` lost while `r_low_cont` and `r_box_f80k` are held: the crop's late drift comes from its height, with the top boundary cutting the front.
 - `r_low_f80k` held: height is not the cause; the drift comes from the crop's length or its history. The cause is then reported as not isolated.
 - `r_low_cont` not held: the test is inconclusive.
+
+These outcomes assumed `r_box_f80k` held, which it does not (below). Amended before `r_low_f80k` reached 125 µs: the test compares the retreat onset of `r_low_f80k` with that of `r_box_f80k` (155 µs). An onset more than 10 µs earlier means the domain height brings the loss forward, which accounts for the crop's earlier drift; otherwise the height is not the cause.
 
 **Grids.**
 - Crop, 0.2 / 0.15 / 0.1 mm, up to 40 µs: grid convergence index after Celik et al., ASME J. Fluids Eng. 130, 078001 (2008), for the hold, the retreat speed and the displacement at +25 µs. Where the apparent order is undefined, the spread is reported instead.
@@ -634,7 +640,7 @@ The tools are `scripts/checks/tracker_sensitivity.py` and `scripts/checks/sensit
   - Through 125 µs the reduced-domain reruns match the original bases within 0.2 mm at every 5 µs save, for the reference, 80 kHz, jet off, 40 kHz and the cone half-width jet.
   - The J = 0.25 jet is lost as before, about 1 mm further back at 125 µs (56.9 against 55.7 mm).
 - **Time step:** Courant 0.15 reproduces Courant 0.3 within 0.2 mm through 90 µs, jet off and 80 kHz.
-- **Tracker thresholds:** on `r_crop_off` at 60, 80 and 100 µs, every pressure-factor and burnt-gas variant and both temperature fronts place the base within 0.2 mm of the baseline. The baseline variant reproduces the stored fronts exactly.
+- **Tracker thresholds:** over 1523 saves of 13 runs, every pressure-factor and burnt-gas variant places the base within 0.8 mm (four cells) of the baseline, and beyond one cell on 0.1–8% of saves. The temperature front taken as the first cell above 1500 K is up to 23.6 mm off (beyond one cell on 46% of saves): upstream of the front, gas heated by the jet's bow shock reaches 1200–1530 K. Requiring the temperature to stay above the threshold over the next 2 mm removes this (within 0.8 mm; beyond one cell on 3.3% at 1500 K and 9.7% at 1900 K). The baseline variant reproduces the stored fronts exactly. (An earlier version of this bullet reported only the saves at 60, 80 and 100 µs of `r_crop_off`.)
 - **Crop against reduced domain**, 80 kHz at 50% duty. Base in mm, by time since the change:
 
 | Since the change | +20 µs | +40 µs | +50 µs | +60 µs | +80 µs |
@@ -650,49 +656,71 @@ The tools are `scripts/checks/tracker_sensitivity.py` and `scripts/checks/sensit
   - `r_low_cont` reproduces the reduced domain's front at every height up to 22 mm, along with its peak CO and temperature.
   - `r_f15box_cont` carries all 70,355 parcels and 2804.2 µg of liquid, and its front lies within 0.3 mm of the 0.2 mm front.
 
-- **Tolerances: accepted.** `r_crop_off_tolctl` gives the same base as the production run at every 1 µs save over 50–70 µs.
-- **Hold after switch-off**, relative to the reference, at a threshold of 1.5 cells: 14–15 µs in the reduced domain (8–17 µs over all tracker variants and base definitions), 11–12 µs in the crop (9–14 µs).
+- **Tolerances, switch-off hold: accepted.** `r_crop_off_tolctl` gives the same base as the production run at every height and every 1 µs save over 50–70 µs (the hold and the first 8 µs of the retreat), while the fields differ (temperature by up to 0.24 K), so the tolerances took effect. Production runs about 6.8 times faster. Whether the tolerance affects the 80 kHz loss is tested separately (`r_box_f80k_tolctl`, `r_box_f80k_tolfull`).
+- **Hold after switch-off**, relative to the reference, at a threshold of 1.5 cells: 14–15 µs in the reduced domain (9–17 µs over the amended tracker variants and base definitions; 8–17 µs with the original ones), 11–12 µs in the crop (9–14 µs).
 
 ### Classes at 200 µs, reduced domain (2026-11-27)
 
-From `scripts/checks/classify.py` over 105 combinations (7 tracker variants × 5 base definitions × 3 drift windows). Offset against `r_box_ref`; baseline values are for the paper's settings.
+From `scripts/checks/classify.py`, offset against `r_box_ref`, under the original criteria (105 combinations) and the amended ones (63 combinations; listed under "Changes to the criteria" below). Baseline values are for the paper's settings. Drift under the amended criteria is fitted over at least three pulse periods with the pulse harmonics removed, with Newey–West standard errors; the final offset is the mean over the last period (at least 10 µs). Onset is the first save after which the offset stays above 1 mm.
 
-| Run | Class (combinations) | Largest \|offset\| (mm) | Final offset (mm) | Drift (mm/µs) |
-|---|---|---|---|---|
-| J = 0.5, steady | held (96), intermediate (9) | 1.8 | +1.4 | +0.002 ± 0.001 |
-| 20 kHz | intermediate (105) | 3.2 | +1.2 | −0.025 ± 0.005 |
-| 30 kHz | intermediate (103), lost (2) | 3.2 | +1.0 | −0.017 ± 0.003 |
-| Jet on again at 95 µs | intermediate (105) | 3.4 | +0.6 | −0.009 ± 0.001 |
-| Half width, cone | intermediate (60), held (42), lost (3) | 2.6 | +2.4 | +0.004 ± 0.001 |
-| 40 kHz | lost (105) | 6.4 | +6.2 | +0.063 ± 0.003 |
-| 80 kHz | lost (103), intermediate (2) | 5.6 | +5.4 | +0.092 ± 0.002 |
-| Jet off | lost (98), intermediate (7) | 9.0 | +8.8 | +0.073 ± 0.002 |
-| J = 0.25, steady | lost (105) | 17.6 | +17.6 | +0.139 ± 0.001 |
-| Dry (to 130 µs) | lost (104), intermediate (1) | 14.4 | +14.4 | +0.272 ± 0.001 |
+| Run | Original class (combinations) | Amended class (combinations) | Final offset (mm), last save / mean | Drift (mm/µs), OLS / HAC SE | Onset (µs) |
+|---|---|---|---|---|---|
+| J = 0.5, steady | held (96), intermediate (9) | held (63) | +1.4 / +1.6 | +0.002 ± 0.001 / ± 0.001 | 108 |
+| 20 kHz | intermediate (105) | intermediate (63) | +1.2 / +1.5 | −0.025 ± 0.005 / +0.014 ± 0.008 | none |
+| 30 kHz | intermediate (103), lost (2) | intermediate (63) | +1.0 / +2.0 | −0.017 ± 0.003 / +0.005 ± 0.006 | none |
+| Jet on again at 95 µs (window from 95 µs) | intermediate (105) | intermediate (63) | +0.6 / +0.8 | −0.009 ± 0.001 / ± 0.002 | none |
+| Half width, cone | intermediate (60), held (42), lost (3) | intermediate (63) | +2.4 / +2.4 | +0.004 ± 0.001 / ± 0.001 | 108 |
+| 40 kHz | lost (105) | lost (63) | +6.2 / +6.0 | +0.063 ± 0.003 / +0.066 ± 0.004 | 104 |
+| 80 kHz | lost (103), intermediate (2) | lost (63) | +5.4 / +4.9 | +0.092 ± 0.002 / ± 0.004 | 155 |
+| Jet off | lost (98), intermediate (7) | lost (63) | +8.8 / +8.4 | +0.073 ± 0.002 / ± 0.005 | 94 |
+| J = 0.25, steady | lost (105) | lost (63) | +17.6 / +16.9 | +0.139 ± 0.001 / ± 0.001 | 96 |
+| Dry (to 130 µs) | lost (104), intermediate (1) | lost (63) | +14.4 / +12.9 | +0.272 ± 0.001 / ± 0.002 | 81 |
 
-- **80 kHz:** the base stays within about 1 mm of the reference until 155 µs, then retreats at 0.09 mm/µs at every height from 4 to 9 mm. The original-solver run (`large_f80k_200`) held to 200 µs (51.9 against 51.3 mm).
-- **What precedes the retreat** (`scripts/analysis/mechanism.py`): with the 80 kHz jet the liquid behind the jet stays at 300–460 µg (1250 µg with the continuous jet) and the gas there at Mach 0.7–0.9 (0.28). Near-wall heat release (8 MW/m with the continuous jet) falls from 5.9 MW/m at 130 µs to 3.4 MW/m at 150 µs and to zero by 170 µs, and the jet-shock pressure ratio from about 7 to about 2. The steady retreat starts at 155 µs. At 40 kHz the heat release falls below 4 MW/m from 130 µs and the steady retreat starts at about 140 µs.
-- **20 and 30 kHz:** near-wall burning goes out during the off-time and relights in the next 25 µs (20 kHz) or 17 µs (30 kHz) pulse, when the liquid behind the jet rebuilds to about 850 µg (20 kHz), and the base returns.
-- `r_box_f60k` is 6.0 mm behind at 154 µs; `r_box_f50k`, `r_box_q120k` and `r_box_patch` are running.
+- **Agreement of the two criteria:** no baseline class differs. Every non-unanimous original combination comes from the single-cell temperature front (T1500, and T1900 at base heights 3 and 2–4 mm); under the amended criteria every class is unanimous.
+- **80 kHz:** the offset stays at or below 1.0 mm until 154 µs and exceeds 1 mm from 155 µs on. The base then retreats at 0.095, 0.085, 0.088 and 0.073 mm/µs at y = 4, 5, 6 and 9 mm. The original-solver run (`large_f80k_200`) held to 200 µs (51.9 against 51.3 mm), and matched the patched run within 0.2 mm through 125 µs.
+- **Half width, cone:** the original-solver run was lost (10.8 mm behind at 200 µs); the patched run ends 2.4 mm behind. Like 80 kHz, this late outcome changed with the solver.
+- `r_box_f60k` is lost (onset 100 µs; 8.0 mm at 176 µs). `r_box_f50k`, `r_box_q120k` and `r_box_patch` are running.
+
+**Observations around the loss** (`scripts/analysis/mechanism.py`; descriptive, not a tested mechanism):
+- 80 kHz: the liquid in x = 49.5–52.5 mm, y < 3 mm stays at 243–471 µg (1230–1260 µg with the continuous jet), and the gas speed there corresponds to Mach 0.7–0.9 (0.28–0.33). The heat release in x = 49.5–60 mm, y < 3 mm falls from 5.9 MW/m at 130 µs to 3.4 MW/m at 150 µs and to about zero by 167 µs (continuous jet: 7.9–8.3 MW/m). The jet-shock pressure ratio falls from about 7 to 1.6–5.0 after 160 µs.
+- 20 kHz: the same heat release is at or below 1 MW/m from 140 µs. It returns to 11.4 MW/m at 155 µs, 10 µs after the pulse ended (120–145 µs), while the liquid is about 740 µg and falling (930 µg at 145 µs). The base returns over 155–164 µs. At 30 kHz the return comes at 130–131 µs (9.1 MW/m), 10 µs after the pulse that ended at 120 µs.
+- Both boxes contain more than the near-wall layer: the heat-release box contains the lower front (y = 1–3 mm at x ≈ 49.5–51.5 mm), and the liquid box contains the jet column, so the liquid there partly tracks the injection itself. A fall in that heat release may be the lower front failing first. These observations are to be repeated with regions that exclude the front and the jet column before they are used.
+- A hypothesis stated earlier on 2026-11-27 ("near-wall heat release below 4 MW/m when the retreat starts; recovery within the same pulse") is withdrawn: the 20 and 30 kHz returns come after the pulse, and at 40 kHz the onset (104 µs) precedes the fall below 4 MW/m (127 µs).
 
 ### Expected outcomes of the runs added on 2026-11-27
 
-Fixed before these runs started, after the classes above were known. The classes and criteria above apply unchanged.
+Fixed before these runs had results, after the classes above were known. Classes are taken from the amended criteria, and a class is stated only if it is unanimous; the original criteria are reported alongside.
 
-- **80 kHz with a later start** (`r_box_f80k_p71`, `r_box_f80k_p73`):
-  - both lost: 80 kHz at 50% duty is reported as lost on the patched solver, after a hold of about 85 µs.
-  - one or both not lost: the late 80 kHz outcome is reported as dependent on the start, with the count of runs in each class.
-- **Recapture at 20 and 30 kHz** (`r_box_f20k_ext`, `r_box_f30k_ext`, `r_box_f20k_p75`). The manuscript states that these frequencies keep the base without net drift only if, in all three runs over 200–350 µs:
-  - the drift over 300–350 µs is below 0.02 mm/µs or not different from zero at two standard errors, and
-  - the largest offset is at most one cell (0.2 mm) above the largest offset over 70–200 µs of the same frequency.
+- **80 kHz with a later start** (`r_box_f80k_p71`, `r_box_f80k_p73`, both extended to 260 µs). At their branch time their base equals the parent's, so by the realization criterion above they test sensitivity to the pulse phase, not independent realizations.
+  - Both lost, with onset 75–95 µs after their first pulse (the parent's is 85 µs): 80 kHz at 50% duty is reported as lost after about 85 µs of pulsing, insensitive to the pulse phase.
+  - Otherwise (either not lost by 260 µs, or an onset outside that range): the loss is reported as phase-dependent, with each run's onset and class.
+- **Default tolerances over the 80 kHz loss** (`r_box_f80k_tolctl`, from 140 µs; `r_box_f80k_tolfull`, from 70 µs). Each passes if the base is within one cell of `r_box_f80k` at every save up to 155 µs and its onset lies within 5 µs of 155 µs; for `r_box_f80k_tolctl` the heat release (definition above) must also first fall below 4 MW/m within 5 µs of the production run's 149 µs. If either fails, the reduced-domain pulsed cases are rerun at the default tolerances before any outcome is stated.
+- **Recapture at 20 and 30 kHz** (`r_box_f20k_ext`, `r_box_f30k_ext`, `r_box_f20k_p75`). The manuscript states that these frequencies keep the base without net drift only if, in all three runs, the drift over the last three pulse periods (fitted as above) satisfies |drift| + 1.96 SE < 0.02 mm/µs, and the largest offset over 200–350 µs is at most one cell (0.2 mm) above the largest over 70–200 µs. Otherwise the class and the drift are reported as they are.
+- **10 kHz** (`r_box_f10k`, to 370 µs): expected intermediate, with the base retreating by roughly 3 mm in each 50 µs off-time and returning in each on-time. If it is lost, the longest off-time that recaptures lies between 25 and 50 µs.
+- **0.15 mm** (`r_f15box_f80k`, pulsing from 90 µs): compared at equal pulsing time. The 80 kHz loss is called grid-independent if the class agrees with `r_box_f80k` and the onset falls 75–95 µs after the first pulse.
 
-  Otherwise the class and the drift are reported as they are.
-- **10 kHz** (`r_box_f10k`): expected intermediate, the base retreating by roughly 3 mm in each 50 µs off-time and returning in each on-time. If it is lost, the longest off-time that recaptures lies between 25 and 50 µs.
-- **Default tolerances over the 80 kHz loss** (`r_box_f80k_tolctl`, restarted from `r_box_f80k` at 140 µs): the tolerance criterion above applies over 140–175 µs. If the base differs by more than one cell at any save, or the near-wall heat release at 170 µs differs by more than a factor of two, the reduced-domain pulsed cases are rerun at the default tolerances before any outcome is stated.
-- **Settings audit of `r_box_f80k` against the original `large_f80k_200`:** the case files differ only in the ODE tolerances, the save interval and the decomposition (8 scotch against 16 simple subdomains). Every pulse injected 258.1–258.9 µg in both runs, and the time step is the same (17 ns). The original run had 15 cells with an n-heptane mass fraction above 1 (up to 1.23) and 40 with N₂ at zero at 160 µs, and 47 with N₂ at zero at 190 µs. In `r_box_f80k` the species sum near the wall never exceeds 1.000.
-- **Liquid and near-wall burning** (hypothesis from the runs above, tested on these runs): in every run that is lost, near-wall heat release (x = 49.5–60 mm, y < 3 mm) has fallen below 4 MW/m, half its continuous-jet value, when the steady retreat starts, and does not recover above it; in every recapture, it recovers above 4 MW/m within the same jet pulse. A run that contradicts either is reported, and the hypothesis is then stated as not general.
+**Settings audit of `r_box_f80k` against the original `large_f80k_200`:**
+- The case files compared (thermophysical, combustion, chemistry, solver-type and species files; fvSchemes, fvSolution, controlDict, decomposeParDict, blockMeshDict, topoSetDict) differ only in the ODE tolerances, the save interval and the decomposition (8 scotch against 16 simple subdomains). The archived original lacks momentumTransport, reactions, dynamicMeshDict and g, so those were not compared.
+- The injector lists differ by design: the original file, an extension, lists only its own later pulses (`jet6`–`jet10`). Pulse for pulse, start times, durations, rates, parcel rates and size distributions are the same, and every pulse injected 258.0–258.9 µg in both runs.
+- The mean time step is 17.5 ns in the original and 17.2 ns in the patched run.
+- The original run had 15 cells with an n-heptane mass fraction above 1 (up to 1.23) and 40 with N₂ at zero at 160 µs, and 47 with N₂ at zero at 190 µs. In `r_box_f80k` the species sum near the wall never exceeds 1.000.
+- `setup.json` of the revision cases records the parent's save interval (5 µs); the case itself saves every 1 µs (`controlDict`).
 
-Changes to the criteria: none.
+### Changes to the criteria
+
+2026-11-27, about 19:30 UTC, after an independent audit of the analysis. The original criteria are still applied and reported (table above).
+
+| Change | Reason |
+|---|---|
+| Temperature fronts must stay above the threshold over the next 2 mm | The first cell above 1500 K is often gas heated by the jet's bow shock, up to 23.6 mm upstream of the front |
+| Base definitions at 3 mm and 2–4 mm dropped from the classes | They lie in the wall flares that the base definition excludes |
+| Drift fitted over at least three pulse periods, with harmonics at the pulse frequency and twice it | A 50 µs window is one period at 20 kHz and half a period at 10 kHz, so the slope depended on phase (20 kHz: −0.015 to −0.051 mm/µs depending on the end save) |
+| Newey–West standard errors (Bartlett kernel, lag at least 15 saves or one period) | The residuals of 1 µs saves are autocorrelated (lag-1 correlation up to 0.92); OLS errors were too small by up to 2.5 times |
+| Held requires \|drift\| + 1.96 SE < 0.02 mm/µs | "Not different from zero" made held easier when the error was larger |
+| Final offset = mean over the last period (at least 10 µs) | A single save carried the 6 mm lost criterion for 40 kHz |
+| Low-domain test by retreat onset | Its outcomes assumed `r_box_f80k` held |
+| `r_box_f80k_tolctl` judged by the onset and the time the heat release falls below 4 MW/m | The earlier ratio of heat release at 170 µs was undefined: production heat release there is about zero and changes sign |
+| `r_f15box_f80k` extended to 220 µs, `r_box_f10k` to 370 µs, the 80 kHz phase runs to 260 µs; `r_box_f80k_tolfull` added | Equal pulsing time on both grids; at least 1.5 periods at 10 kHz; time to see a late loss; a tolerance effect that builds up from 70 µs |
 
 ## Reproducing
 

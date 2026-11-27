@@ -41,14 +41,17 @@ def structure(rows, heights_mm=(1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 22, 26, 30, 34,
     return out
 
 
-def front_T(rows, T_min, heights_mm=(4, 5, 6), x0=0.035, x1=0.14, dx=0.2e-3):
+def front_T(rows, T_min, heights_mm=(4, 5, 6), x0=0.035, x1=0.14, dx=0.2e-3, sustain_mm=0.0):
     """Temperature-based front, independent of pressure and species: per height, the first cell moving downstream with
-    T above T_min, as (y mm, x mm)."""
+    T above T_min, as (y mm, x mm). With sustain_mm > 0 the temperature must stay above T_min over that distance
+    downstream, which rejects gas heated by the jet's bow shock (1200-1530 K upstream of the front)."""
     rows_y = _by_row(rows, "y", dx)
+    n = max(1, round(sustain_mm * 1e-3 / dx) + 1)
     out = []
     for h in heights_mm:
         line = sorted((r for r in rows_y[int(h * 1e-3 / dx + 1e-6)] if x0 < r["x"] < x1), key=lambda r: r["x"])
-        out.append((h, next((r["x"] * 1e3 for r in line if r["T"] > T_min), None)))
+        hot = [r["T"] > T_min for r in line]
+        out.append((h, next((line[j]["x"] * 1e3 for j in range(len(line) - n + 1) if all(hot[j:j + n])), None)))
     return out
 
 
