@@ -68,6 +68,14 @@
   ]
  },
  {
+  "name": "r_box_f80k_tolctl",
+  "ranks": 8,
+  "needs": [
+   "r_box_f80k",
+   "End"
+  ]
+ },
+ {
   "name": "r_box_f80k_p71",
   "ranks": 8,
   "needs": [

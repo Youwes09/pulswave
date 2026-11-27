@@ -573,6 +573,7 @@ The cases are built by `scripts/campaign/build_revision.py` and run by `scripts/
 | `r_box_f80k_p71`, `r_box_f80k_p73` | 80 kHz with pulsing started 1 and 3 µs later, from the reference's saves: does the late outcome depend on the start? |
 | `r_box_f20k_ext`, `r_box_f30k_ext`, `r_box_f20k_p75` | 20 and 30 kHz to 350 µs, and 20 kHz started 5 µs later: does the recapture stay bounded? |
 | `r_box_f10k` | 10 kHz to 300 µs: an off-time of 50 µs, more than three times the hold |
+| `r_box_f80k_tolctl` | 80 kHz at the solver's default ODE tolerances over 140–175 µs, where the 80 kHz base is lost |
 | `r_crop_*` (switch-off, 50% / 37.5% / 25% duty, plug removed, 1 mm jet, wall treatments) | Crop cases on the patched solver, within the crop's window (below) |
 | `r_crop_*_co15` | Courant number 0.15 against 0.3 |
 | `r_crop_off_tolctl` | Default ODE tolerances over the hold |
@@ -687,6 +688,8 @@ Fixed before these runs started, after the classes above were known. The classes
 
   Otherwise the class and the drift are reported as they are.
 - **10 kHz** (`r_box_f10k`): expected intermediate, the base retreating by roughly 3 mm in each 50 µs off-time and returning in each on-time. If it is lost, the longest off-time that recaptures lies between 25 and 50 µs.
+- **Default tolerances over the 80 kHz loss** (`r_box_f80k_tolctl`, restarted from `r_box_f80k` at 140 µs): the tolerance criterion above applies over 140–175 µs. If the base differs by more than one cell at any save, or the near-wall heat release at 170 µs differs by more than a factor of two, the reduced-domain pulsed cases are rerun at the default tolerances before any outcome is stated.
+- **Settings audit of `r_box_f80k` against the original `large_f80k_200`:** the case files differ only in the ODE tolerances, the save interval and the decomposition (8 scotch against 16 simple subdomains). Every pulse injected 258.1–258.9 µg in both runs, and the time step is the same (17 ns). The original run had 15 cells with an n-heptane mass fraction above 1 (up to 1.23) and 40 with N₂ at zero at 160 µs, and 47 with N₂ at zero at 190 µs. In `r_box_f80k` the species sum near the wall never exceeds 1.000.
 - **Liquid and near-wall burning** (hypothesis from the runs above, tested on these runs): in every run that is lost, near-wall heat release (x = 49.5–60 mm, y < 3 mm) has fallen below 4 MW/m, half its continuous-jet value, when the steady retreat starts, and does not recover above it; in every recapture, it recovers above 4 MW/m within the same jet pulse. A run that contradicts either is reported, and the hypothesis is then stated as not general.
 
 Changes to the criteria: none.
