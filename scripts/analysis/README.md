@@ -9,6 +9,7 @@ Per-save extraction behind the campaign results. Set `BOXES` to the case directo
 | `extract_wall.py <case>...` | Near-wall gas state behind the jet: temperature, fuel, CO2, hot fraction, heat release, peak pressure |
 | `plug_gas.py <root> <out> <case>...` | Front and plug-region gas speed only, single process |
 | `plug_gas_score.py <json>...` | Plug gas speed per case against the front, with the thresholds fixed before the out-of-sample test |
+| `mechanism.py <case>...` | Base, front strength, heat release at the base and the wall, plug and wall-layer liquid, evaporation, plug gas speed and Mach number, mixture ahead of the base, and the largest ΣY |
 
 Numbers in the manuscript, recomputed from the tracked data or from the cases:
 

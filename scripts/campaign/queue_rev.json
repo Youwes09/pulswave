@@ -1,0 +1,201 @@
+[
+ {
+  "name": "r_f10_cont",
+  "ranks": 16,
+  "needs": null
+ },
+ {
+  "name": "r_f10_f80k",
+  "ranks": 16,
+  "needs": [
+   "r_f10_cont",
+   "5.1e-05"
+  ]
+ },
+ {
+  "name": "r_f10_q120k",
+  "ranks": 16,
+  "needs": [
+   "r_f10_cont",
+   "5.1e-05"
+  ]
+ },
+ {
+  "name": "r_crop_off_tolctl",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_full_j1",
+  "ranks": 32,
+  "needs": null
+ },
+ {
+  "name": "r_box_f60k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_f15box_cont",
+  "ranks": 24,
+  "needs": null
+ },
+ {
+  "name": "r_low_cont",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_low_f80k",
+  "ranks": 8,
+  "needs": [
+   "r_low_cont",
+   "7e-05"
+  ]
+ },
+ {
+  "name": "r_box_f50k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_box_q120k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_cut",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_esc_cont",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_esc_off",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_box_patch",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_f10_off",
+  "ranks": 16,
+  "needs": [
+   "r_f10_cont",
+   "5.1e-05"
+  ]
+ },
+ {
+  "name": "r_f10_f40k",
+  "ranks": 16,
+  "needs": [
+   "r_f10_cont",
+   "5.1e-05"
+  ]
+ },
+ {
+  "name": "r_crop_f80k_s45",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_q120k_s45",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_off_s45",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_f80k_s40",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_q120k_s40",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_off_s40",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_d375_100k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_q160k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_q80k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_d1_off",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_fric",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_stick",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_crop_noslip",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_f15_f80k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_f15_off",
+  "ranks": 8,
+  "needs": null
+ },
+ {
+  "name": "r_box_off165",
+  "ranks": 8,
+  "needs": [
+   "r_box_ref",
+   "0.000166"
+  ]
+ },
+ {
+  "name": "r_box_f80k_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_f80k",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_ref_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_ref",
+   "End"
+  ]
+ }
+]

@@ -447,7 +447,7 @@ Base x [mm] at y = 3 mm (`wave`). The crops switch at 50 µs; `crop_grid_off` an
 
 The throttled base slows from 0.08 mm/µs (145–160 µs) to 0.02 mm/µs (190–200 µs) and is settling near x ≈ 61 mm, about 10 mm behind the J = 1 control; the shock at 3 mm weakens from pressure ratio 6.0 to 3.4. The jet-off base speeds up over the same interval (0.03 to 0.12 mm/µs). It does not slide towards the paper's low-J initiation point (about 80 mm) within 200 µs. Throttling to 50% fuel keeps an anchored front, displaced about 10 mm; pulsing at 50% keeps it within 0.8 mm (80 kHz). The turndown comparison at 50% fuel is therefore a 10 mm offset, not a lost mode.
 
-**1 mm jet (option B, `crop_grid_d1`, `crop_grid_d1_off`).** The 1 mm patch is five faces carrying ρ_l u_j d_j, so its momentum flux per unit area is the nominal one (1.0×, against 1.25× for the 0.5 mm jet's 0.4 mm patch). Jet on at 50 µs the base sits at 49.9 mm at 3 mm, 51.5 mm at 9 mm and 58.3 mm at 15 mm (0.5 mm jet: 50.7, 53.7, 60.7). After switch-off the base moves 0.2 mm by 10 µs, the same as the 0.5 mm jet, and then retreats at 0.067 mm/µs over 60–75 µs, against 0.12 mm/µs for the 0.5 mm jet. After 25 µs it has moved 1.2 mm against 2.0 mm, and after 30 µs 1.4 mm against 2.6 mm (0.04 against 0.12 mm/µs over the last 5 µs). The hold time does not double with jet width; the retreat speed halves. The run was stopped at 80 µs (30 µs after switch-off) on 2026-10-11: the last 10 µs would have cost about 7 h and could not change the conclusion.
+**1 mm jet (option B, `crop_grid_d1`, `crop_grid_d1_off`).** The 1 mm patch is four faces (0.8 mm, `log.topoSet`) carrying ρ_l u_j d_j, so its momentum flux per unit area is 1.25× nominal, the same as for the 0.5 mm jet's 0.4 mm patch. (Corrected 2026-11-26; this note earlier said five faces and 1.0×.) Jet on at 50 µs the base sits at 49.9 mm at 3 mm, 51.5 mm at 9 mm and 58.3 mm at 15 mm (0.5 mm jet: 50.7, 53.7, 60.7). After switch-off the base moves 0.2 mm by 10 µs, the same as the 0.5 mm jet, and then retreats at 0.067 mm/µs over 60–75 µs, against 0.12 mm/µs for the 0.5 mm jet. After 25 µs it has moved 1.2 mm against 2.0 mm, and after 30 µs 1.4 mm against 2.6 mm (0.04 against 0.12 mm/µs over the last 5 µs). The hold time does not double with jet width; the retreat speed halves. The run was stopped at 80 µs (30 µs after switch-off) on 2026-10-11: the last 10 µs would have cost about 7 h and could not change the conclusion.
 
 ### The base follows the wall liquid (2026-10-11)
 
@@ -549,6 +549,104 @@ This has three consequences:
 1. **The near-wall liquid is not yet steady,** even though the gas-phase front has been steady for over 50 µs. The residence estimate above (about 95–190 µs) is longer than the run.
 2. **Paper Fig. 3c shows jet droplets along the whole wall downstream of the jet.** Ours stay within 30 mm of it. The likely cause is the droplet–wall interaction model (`rebound`), which the paper does not state.
 3. **After the jet stops, this reservoir may keep blocking the flow,** so the measured hold time could depend on a modelling choice. Step 2a tests that directly.
+
+## Revision runs (Nov 2026)
+
+Every case the manuscript uses is rerun on the patched solver ([solver.md](solver.md), species convection with the mass flux), with ODE tolerances absTol 1e-10 and relTol 1e-3, and ascii saves every 1 µs. New cases cover:
+- grids, time step and tolerances;
+- realizations;
+- frequency and duty-cycle brackets;
+- the domains.
+
+The cases are built by `scripts/campaign/build_revision.py` and run by `scripts/campaign/queue_rev.py`, and their names start with `r_`. Runs branch from the original parent states:
+- crop: `crop_grid` at 50 µs;
+- reduced domain: `box_large` at 70 µs.
+
+### What each run decides
+
+| Runs | Question |
+|---|---|
+| `r_box_*` (reference, jet off, dry, jet on again, 20–80 kHz, 120 kHz at 25%, J = 0.25, J = 0.5, cone half-width, `r_box_patch`) | Do the reduced-domain outcomes hold on the patched solver? |
+| `r_box_f50k`, `r_box_f60k` | Threshold frequency at 50% duty, in the domain used for long-time outcomes |
+| `r_box_q120k` | Duty-cycle result (50% against 25% at an off-time of 6.25 µs) in the reduced domain |
+| `r_box_f80k_ext`, `r_box_ref_ext` | 80 kHz and reference to 350 µs |
+| `r_crop_*` (switch-off, 50% / 37.5% / 25% duty, plug removed, 1 mm jet, wall treatments) | Crop cases on the patched solver, within the crop's window (below) |
+| `r_crop_*_co15` | Courant number 0.15 against 0.3 |
+| `r_crop_off_tolctl` | Default ODE tolerances over the hold |
+| `r_crop_*_s40`, `r_crop_*_s45` | Realizations: restarts from 40 and 45 µs, so the droplet models' random sequence restarts at a different time |
+| `r_f15_*`, `r_f10_*` | Crop on 0.15 and 0.1 mm |
+| `r_f15box_cont`, `r_f15box_f80k` | Reduced domain on 0.15 mm, mapped at 70 µs: 80 kHz against its own continuous jet to 200 µs |
+| `r_low_cont`, `r_low_f80k` | Reduced domain cut to the crop's height (120 × 25 mm), mapped at 70 µs: does the crop's height cause its late drift? |
+| `r_full_j1` | Full domain from uniform freestream, for the comparison with the published J = 1 front |
+
+### Analysis criteria
+
+The criteria below were fixed on 2026-11-27. At that time `r_box_f50k`, `r_box_f60k`, `r_box_q120k`, `r_low_*`, `r_f15box_*`, the realizations, `r_f15_*`, `r_f10_off`, `r_f10_f40k` and all queued runs had no results. They are applied to those runs unchanged. Any later change is listed at the end of this section, and the result under the original criterion is reported too.
+
+**Quantities.** These are unchanged from the manuscript:
+- front at height y: the pressure factor of 1.5 over 0.8 mm, with CO + CO₂ > 0.02 nearby;
+- base: the median of the front at y = 4, 5 and 6 mm;
+- offset: the base minus the reference base at the same time, on the same grid and in the same domain;
+- hold and retreat: as defined in the manuscript.
+
+Drift is the least-squares slope of the offset over the last 50 µs of a run, with its standard error. 50 µs covers at least four cycles at 80 kHz.
+
+**Classes**, relative to the jet-off retreat of 0.07–0.10 mm/µs:
+- **Held:** the largest |offset| over the pulsing window is at most 2.0 mm, and the drift is below 0.02 mm/µs or not different from zero at two standard errors.
+- **Lost:** the drift is at least 0.05 mm/µs and different from zero at two standard errors, or the final offset is at least 6 mm.
+- **Intermediate:** neither. Reported with its amplitude and drift.
+
+**Sensitivity.** Every class is recomputed for each of these choices. A class is stated only if it is the same for all of them:
+- pressure factor 1.3, 1.5 or 2.0;
+- burnt-gas cutoff 0.01, 0.02 or 0.05;
+- base heights 3, 2–4, 4–6, 5–6 or 4–6 + 9 mm;
+- hold threshold 1.25–2.5 cells;
+- a temperature front at 1500 K or 1900 K;
+- drift window 30, 50 or 70 µs.
+
+The tools are `scripts/checks/tracker_sensitivity.py` and `scripts/checks/sensitivity.py`.
+
+**Crop window.** Crop results are used up to 40 µs after the change, the window over which the crop was measured to agree with the reduced domain (below). Outcomes beyond 40 µs come from the reduced domain.
+
+**Low-domain test.** The expected outcomes are fixed in advance:
+- `r_low_f80k` lost while `r_low_cont` and `r_box_f80k` are held: the crop's late drift comes from its height, with the top boundary cutting the front.
+- `r_low_f80k` held: height is not the cause; the drift comes from the crop's length or its history. The cause is then reported as not isolated.
+- `r_low_cont` not held: the test is inconclusive.
+
+**Grids.**
+- Crop, 0.2 / 0.15 / 0.1 mm, up to 40 µs: grid convergence index after Celik et al., ASME J. Fluids Eng. 130, 078001 (2008), for the hold, the retreat speed and the displacement at +25 µs. Where the apparent order is undefined, the spread is reported instead.
+- Reduced domain, 0.2 against 0.15 mm: the class of the 80 kHz case must agree on both grids.
+- A mapped run is branched only once its base has varied by at most one 0.2 mm cell over the preceding 10 µs. For `r_f15box_cont` the check covers 80–90 µs; if it fails, the branch moves to the first later save that passes.
+
+**Realizations.** A restart counts as an independent realization only if, at the branch time, its base differs from the parent's by more than one cell or its parcel count by more than 1%. Otherwise it is reported as restart reproducibility.
+
+**Tolerances.** Accepted if, in `r_crop_off_tolctl`, the base is within one cell of the production run at every save over 50–70 µs and the hold and retreat are unchanged. Otherwise the headline cases are rerun at the default tolerances.
+
+### Results so far (2026-11-27)
+
+- **Patched solver:**
+  - On the 75–80 µs check the base is identical to the original solver's.
+  - ΣY stays at or below 0.963 through 84.9 µs.
+  - Through 125 µs the reduced-domain reruns match the original bases within 0.2 mm at every 5 µs save, for the reference, 80 kHz, jet off, 40 kHz and the cone half-width jet.
+  - The J = 0.25 jet is lost as before, about 1 mm further back at 125 µs (56.9 against 55.7 mm).
+- **Time step:** Courant 0.15 reproduces Courant 0.3 within 0.2 mm through 90 µs, jet off and 80 kHz.
+- **Tracker thresholds:** on `r_crop_off` at 60, 80 and 100 µs, every pressure-factor and burnt-gas variant and both temperature fronts place the base within 0.2 mm of the baseline. The baseline variant reproduces the stored fronts exactly.
+- **Crop against reduced domain**, 80 kHz at 50% duty. Base in mm, by time since the change:
+
+| Since the change | +20 µs | +40 µs | +50 µs | +60 µs | +80 µs |
+|---|---|---|---|---|---|
+| Reduced domain, continuous | 51.9 | 51.5 | 51.5 | 51.5 | 51.3 |
+| Reduced domain, 80 kHz | 52.1 | 52.5 | 52.5 | 52.3 | 52.1 |
+| Crop, continuous | 51.9 | 51.9 | 51.5 | 51.7 | 51.3 |
+| Crop, 80 kHz | 52.5 | 52.9 | 53.1 | 54.3 | 55.7 |
+
+  The two domains agree within 0.6 mm up to +40 µs. After +50 µs the crop 80 kHz base retreats at about the jet-off rate, while the reduced-domain base holds. The 50 and 60 kHz crop runs retreat in the same way. In the crop, the front reaches the top boundary (y = 25 mm), which imposes the freestream inflow, at x ≈ 77 mm. In the reduced domain the front leaves through the outlet.
+- **Top outflow (not used):** a crop whose top boundary became zero-gradient downstream of x = 72 mm (per-face `mixed` condition) was tried for 80 kHz and jet off. Both failed numerically within 7 µs, with the time step falling to about 1e-15 s, because the flow there still enters the domain.
+- **Mapped states at 70 µs:**
+  - `r_low_cont` reproduces the reduced domain's front at every height up to 22 mm, along with its peak CO and temperature.
+  - `r_f15box_cont` carries all 70,355 parcels and 2804.2 µg of liquid, and its front lies within 0.3 mm of the 0.2 mm front.
+
+Changes to the criteria: none.
 
 ## Reproducing
 

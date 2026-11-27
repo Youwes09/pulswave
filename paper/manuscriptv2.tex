@@ -1,0 +1,457 @@
+\documentclass[aip,pof,preprint,amsmath,amssymb]{revtex4-2}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{textcomp}
+\usepackage[hidelinks]{hyperref}
+\usepackage{lineno}
+\linenumbers
+
+\newcommand{\us}{\,\textmu s}
+\newcommand{\um}{\,\textmu m}
+\newcommand{\mmus}{\,mm/\textmu s}
+\newcommand{\nh}{\textit{n}-heptane}
+
+\begin{document}
+
+\title{Response of a liquid-jet-anchored oblique detonation to jet interruption, pulsing and throttling}
+
+\author{Yuvan Senthilkumar}
+\email{yuvi.shen@outlook.com}
+\affiliation{Independent researcher, Austin, Texas, USA}
+
+\begin{abstract}
+A transverse liquid jet can initiate and anchor an oblique detonation wave (ODW) in an \nh\ spray, but only steady jets have been studied. Two-dimensional Eulerian--Lagrangian simulations of a jet at a jet-to-crossflow momentum ratio $J = 1$ on a 27\textdegree\ wedge examine how the wave responds when the jet is switched off, pulsed or throttled. The detonation survives switch-off for the 130\us\ simulated, although near the wall it weakens. The lower end of the front, the base, holds for 11.5--20\us, about one flow-through time behind the front, and then retreats at 0.07--0.10\mmus. About 10\us\ of the hold remains without jet liquid; the liquid left near the jet lengthens it. In these runs pulsing held the base only if each pulse was long enough: at an off-time of 6.25\us, 50\% duty holds it and 25\% duty does not. At 50\% duty, 80~kHz keeps the base within 1.2~mm of the continuous jet, while at 20--40~kHz it oscillates by 3--4~mm. At half the jet fuel, the 80~kHz pulse holds the base and a jet throttled to $J = 0.25$ loses it; a steady half-width jet holds or loses it depending on how the injection is represented. Total-pressure recovery downstream does not distinguish a held base from a lost one, and pulsing leaves more vapor unburnt. Each case is a single realization in a dense near-wall spray where the solver's vapor mass fraction exceeds unity.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+An oblique detonation wave (ODW) is an oblique shock wave (OSW) closely coupled with the heat release behind it. A standing ODW burns a hypersonic airstream in a short combustor at high thermal cycle efficiency, which makes the oblique detonation wave engine (ODWE) a candidate for hypersonic air-breathing propulsion \cite{Kailasanath2000,Jiang2023review,Rosato2021}. Standing ODWs have been established in shock-tunnel combustors \cite{Zhang2022exp}, including with kerosene \cite{Han2023trip}. A practical combustor needs the wave to initiate within the combustor length and to stay anchored as conditions change \cite{Jiang2023review,ZhangWen2025}.
+
+Initiation can be controlled by the geometry, with stepped wedges \cite{Qin2018modified}, on-wedge trips \cite{Han2023trip}, bumps \cite{Zhang2026bump,Yan2026bump} and wedges adjusted to the flow \cite{Sun2023unsteady}, or by depositing energy, as with laser hot spots \cite{Xin2024laser}. Jiang et al.\ \cite{Jiang2025energy} sustained an ODW with pulsed energy deposition at 2.3--6.5\% of the mean power that continuous deposition needs; pulsing worked above a critical frequency, set by the arrival of successive detonation waves, which fell from about 50 to 8.5~kHz as the pulse energy rose. Jets offer a third route: hot jets \cite{Wang2022hotjet,Li2020hotjet,Qin2020coflow,Han2012hotjet}, cold transverse jets \cite{Han2024jet,ZhangJiang2023jet}, jet--wedge combinations \cite{Yao2023jetwedge} and transverse injection into a non-uniform inflow \cite{Ren2025mach}. Two studies used unsteady jets. A sweeping jet shortened the initiation length by 25\% \cite{Fan2024sweeping}, and an ODW induced by a brief jet behind a wall cavity settled at the cavity's trailing edge after the jet closed \cite{Liu2026cavity}. In hot-jet experiments in a premixed flow, by contrast, the ODW decoupled when the jet pressure fell below a threshold \cite{Han2012hotjet}.
+
+Liquid fuels make both tasks harder, because droplets must break up and evaporate before the gas can react, and evaporation cools the gas behind the shock. Two-phase ODWs initiate and stabilize differently from gaseous ones \cite{Ren2018jfm,Ren2019pci}, and in \nh\ sprays the initiation length depends non-monotonically on the droplet diameter \cite{Teng2023droplet,Tian2024jfm}. Spray ODW initiation \cite{Guo2023cnf}, detachment \cite{Guo2025cnf} and the transient dynamics of gaseous \nh\ ODWs \cite{Wu2026heptane} have been simulated. A pure \nh\ spray fails to form an ODW in a pre-injection ODWE combustor at Mach~9 and 30~km \cite{Wang2025cnf}. Wang et al.\ \cite{Wang2026ast} showed that a transverse liquid \nh\ jet initiates an ODW in such a spray on an open 27\textdegree\ wedge: for $0.1 \le J \le 0.3$ the jet mainly enriches the near-wall mixture, and for $J \ge 0.4$ its OSW initiates detonation directly. ODWs also respond to unsteady and periodic inflow \cite{Yang2019jfm,Yang2021pof,Ren2021osc}. In a confined combustor with a steady jet, inlet-pressure forcing at 4 and 8~kHz moved the triple point by 3--5~mm at $J = 0.5$, and at $J = 1$ the ODW lost stabilization \cite{Wang2026confined}. The final wave can also depend on its history \cite{Liu2018hysteresis,Han2025hysteresis}.
+
+In all of the liquid-jet work the jet is steady. To the author's knowledge, no study of an interrupted, pulsed or throttled liquid jet anchoring an ODW has been reported. Such a jet differs from pulsed energy deposition and from a gaseous jet, because it leaves liquid and fuel-rich vapor near the wall after each pulse. This paper asks how a liquid-jet-anchored ODW responds when the jet stops, restarts, is pulsed at different duty cycles and frequencies, and is throttled, and how pulsing compares with steady jets that carry the same mean fuel. Section~\ref{sec:method} gives the method, Sec.~\ref{sec:results} the results, Sec.~\ref{sec:discussion} the discussion and Sec.~\ref{sec:conclusions} the conclusions.
+
+\section{Method}\label{sec:method}
+
+\subsection{Governing equations and solver}
+
+The gas phase obeys the two-dimensional, multicomponent, compressible Navier--Stokes equations with source terms for exchange with the liquid,
+\begin{align}
+\frac{\partial \rho}{\partial t} + \nabla\cdot(\rho\mathbf{u}) &= S_m, \\
+\frac{\partial (\rho\mathbf{u})}{\partial t} + \nabla\cdot(\rho\mathbf{u}\mathbf{u}) + \nabla p - \nabla\cdot\boldsymbol{\sigma} &= \mathbf{S}_F, \\
+\frac{\partial (\rho E)}{\partial t} + \nabla\cdot[\mathbf{u}(\rho E + p)] + \nabla\cdot\mathbf{q} - \nabla\cdot(\boldsymbol{\sigma}\cdot\mathbf{u}) &= S_e, \\
+\frac{\partial (\rho Y_i)}{\partial t} + \nabla\cdot(\rho\mathbf{u} Y_i) - \nabla\cdot\left(\frac{\lambda}{c_p} \nabla Y_i\right) &= \dot\omega_i + S_{Y,i},
+\end{align}
+for every species $i$ except N$_2$, where $\rho$, $\mathbf{u}$, $p$, $E = e + |\mathbf{u}|^2/2$ and $Y_i$ are the density, velocity, pressure, specific total energy (with $e$ the specific internal energy) and mass fraction of species $i$; $\boldsymbol{\sigma} = \mu[\nabla\mathbf{u} + (\nabla\mathbf{u})^\mathrm{T} - \tfrac{2}{3}(\nabla\cdot\mathbf{u})\mathbf{I}]$ is the viscous stress tensor with dynamic viscosity $\mu$; $\mathbf{q}$ is the conductive heat flux, which the solver evaluates as Fourier's law applied to the internal energy, $\mathbf{q} = -(\lambda/c_p)\nabla e = -(\lambda/\gamma)\nabla T$, with thermal conductivity $\lambda$, temperature $T$, specific heats $c_p$ and $c_v$ and $\gamma = c_p/c_v$; $\dot\omega_i$ is the chemical source of species $i$; and $S_m$, $\mathbf{S}_F$, $S_e$ and $S_{Y,i}$ are the interphase sources of mass, momentum, energy and species. The species diffusivity $\lambda/(\rho c_p)$ corresponds to a unity Lewis number. The system is closed by the ideal-gas law $p = \rho R_u T/W$, with $R_u$ the universal gas constant and $W$ the mixture molar mass, and by Sutherland's law for viscosity \cite{Sutherland1893}, with a single set of coefficients ($A_s = 1.672 \times 10^{-6}$~Pa\,s\,K$^{-1/2}$, $T_s = 170.7$~K) for every species. Chemistry follows the 44-species, 112-reaction skeletal \nh\ mechanism of Liu et al.\ \cite{Liu2004mech}, integrated in each cell with a stiff extrapolation solver (seulex \cite{Hairer1996}). There is no turbulence model.
+
+The liquid is tracked as Lagrangian parcels, each representing a number of identical droplets of diameter $d$, velocity $\mathbf{u}_d$, temperature $T_d$ and mass $m_d$. Each droplet obeys
+\begin{align}
+\frac{d\mathbf{u}_d}{dt} &= \frac{3}{4}\frac{\rho C_d}{\rho_l d}|\mathbf{u} - \mathbf{u}_d|(\mathbf{u} - \mathbf{u}_d) + \mathbf{g}, \\
+m_d c_l \frac{dT_d}{dt} &= \pi d \lambda \mathrm{Nu}\,(T - T_d) - \dot m_d L_v, \\
+\frac{dm_d}{dt} &= -\dot m_d,
+\end{align}
+where $\rho_l = 680$~kg/m$^3$ and $c_l$ are the liquid density and specific heat, $L_v$ the latent heat, $\dot m_d$ the evaporation rate and $\mathbf{g}$ the gravitational acceleration. Pr and Sc are the gas Prandtl and Schmidt numbers, We the droplet Weber number based on the slip velocity and Oh the Ohnesorge number. The drag coefficient is that of a rigid sphere, $C_d = (24/\mathrm{Re}_d)(1 + \mathrm{Re}_d^{2/3}/6)$ for a droplet Reynolds number $\mathrm{Re}_d = \rho|\mathbf{u} - \mathbf{u}_d|d/\mu < 1000$ and $C_d = 0.424$ above \cite{Liu1993drag}. The Nusselt number follows Ranz and Marshall \cite{Ranz1952}, $\mathrm{Nu} = 2 + 0.6\,\mathrm{Re}_d^{1/2}\mathrm{Pr}^{1/3}$, with Bird's correction for the blowing of the evaporating vapor. Evaporation uses OpenFOAM's boiling-aware model, in which $\dot m_d$ follows from the vapor concentration difference between the droplet surface (from the saturation pressure at $T_d$) and the surrounding gas, with a Sherwood number $\mathrm{Sh} = 2 + 0.6\,\mathrm{Re}_d^{1/2}\mathrm{Sc}^{1/3}$, and switches to a boiling rate when the droplet reaches its boiling point. Secondary breakup follows Pilch and Erdman \cite{Pilch1987}, with a critical Weber number $\mathrm{We}_c = 12(1 + 1.077\,\mathrm{Oh}^{1.6})$ and constants $B_1 = 0.75$ and $B_2 = 0.348$; primary atomization, droplet collision, a wall film and turbulent dispersion are not modeled, so the jet enters as a stream of droplets. Droplets reaching the wall rebound elastically. The liquid properties are those of \nh\ in OpenFOAM's thermophysical library. The interphase sources are the sums over the parcels in each cell of volume $V_c$,
+\begin{equation}
+S_m = \frac{1}{V_c}\sum \dot m_d, \quad \mathbf{S}_F = -\frac{1}{V_c}\sum m_d\left(\frac{d\mathbf{u}_d}{dt} - \mathbf{g}\right) + \frac{1}{V_c}\sum \dot m_d\mathbf{u}_d,
+\end{equation}
+summed with the number of droplets in each parcel; $S_{Y,i}$ equals $S_m$ for \nh\ and is zero for the other species, and $S_e$ the corresponding enthalpy and kinetic-energy exchange; they are evaluated from the parcel changes over each time step and applied explicitly (particle-source-in-cell coupling \cite{Crowe1977}). The gas equations carry no liquid volume fraction.
+
+The equations are solved with the two-phase detonationFoam solver \cite{Sun2023detonationfoam,detonationFoamSoftware} on OpenFOAM-8 \cite{Weller1998}. The convective fluxes of mass, momentum and energy use the Kurganov--Noelle--Petrova scheme \cite{Kurganov2001} with limited-linear reconstruction and are advanced explicitly with first-order (forward Euler) time stepping; the species are transported implicitly within the same step with a bounded limited-linear scheme on the Kurganov--Noelle--Petrova mass flux, and the viscous and diffusive terms are added as an implicit correction. The time step is set by a Courant number of 0.3 based on the flow velocity, about 12--18~ns on the 0.2~mm grid; the corresponding acoustic Courant number, based on the flow speed plus the sound speed, stays below 0.4.
+
+% REVISION: tolerance-verification sentence to be finalised from the hold-phase control run (r_crop_off_tolctl).
+In the solver as distributed, the species convection scheme takes its upwind direction from the volume flux while it transports the mass flux. Where the two fluxes differ in sign, which the Kurganov--Noelle--Petrova scheme allows in slow near-wall cells, the species update is unbounded; in the runs of the original submission the \nh\ vapor mass fraction exceeded 1 in some dense wall cells. All results reported here use a corrected solver that takes the upwind direction from the mass flux, a one-line change. It removes the defect and leaves the base position unchanged in a direct comparison (Sec.~\ref{sec:robust}). Every case restarts from a state at 50 or 70\us\ that contains no such cells. The chemistry is integrated with absolute and relative tolerances of $10^{-10}$ and $10^{-3}$; against the solver's default tolerances ($10^{-15}$ and $10^{-4}$) these leave the base position unchanged and the fields within 0.4\%, at a quarter to an eighth of the cost. These numerics, the slip gas wall and the absence of a turbulence model follow Ref.~\onlinecite{Wang2026ast}, which used its own solver built on OpenFOAM-7 \cite{Wang2024breakup}. Two choices differ: evaporation uses the boiling-aware model above instead of the Abramzon--Sirignano model \cite{Abramzon1989}, which OpenFOAM-8 does not provide, and droplets rebound elastically from the wall, a model Ref.~\onlinecite{Wang2026ast} does not state.
+
+The boundary conditions are as follows. The inflow and the upper boundary impose the freestream state and inject the freestream droplets; the outflow has zero-gradient conditions; the wall is a slip, adiabatic, impermeable wall for the gas, and the jet enters only as droplets through its wall faces. The domain starts from the uniform freestream without droplets.
+
+\subsection{Configuration}
+
+The configuration is the open-wedge case of Ref.~\onlinecite{Wang2026ast} (Fig.~\ref{fig:schematic}): a 27\textdegree\ wedge representing the combustor of an ODWE flying at Mach~9 and 30~km. The domain is aligned with the wedge surface, with $x$ along the wall from the leading edge and $y$ normal to it. The inflow, at 28.55~kPa, 697.0~K and 2535.0~m/s, carries stoichiometric \nh\ droplets of 10\um\ at 300~K. A liquid \nh\ jet issues normally from the wall at $x = 50$~mm through a slot of width $d_j = 0.5$~mm. The jet-to-crossflow momentum ratio is $J = \rho_l u_j^2/(\rho_2 u_2^2)$, where $\rho_l$ is the liquid density and subscript 2 denotes the state behind the wedge OSW; $J = 1$ corresponds to a jet velocity $u_j = 60.83$~m/s. The jet droplets follow a Rosin--Rammler distribution \cite{Rosin1933} with size parameter 10\um, exponent 3 and range 1--30\um\ (mean 8.9\um); Ref.~\onlinecite{Wang2026ast} gives only the average diameter, so the spread is chosen here.
+
+The case is two-dimensional with a depth of 2~mm, and all mass flows are per 2~mm of depth. Reference~\onlinecite{Wang2026ast} gives no jet mass flow; here the jet carries $\rho_l u_j d_j$ per unit depth, that of liquid filling the slot. On the 0.2~mm grid the jet occupies two wall faces (0.4~mm), so its momentum flux per unit area is 1.25 times nominal; the quoted $J$ is computed from the jet velocity. The continuous jet injects 41.4~g/s, 4.3 times the fuel the inflow spray carries into the full domain, so reducing it is not an engine fuel saving.
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_schematic.pdf}
+\caption{Configuration in the frame aligned with the wedge surface. (a) The full domain follows Ref.~\onlinecite{Wang2026ast}; the jet is switched and pulsed in the reduced domain, and the grid and follow-up tests use the crop. Solid: computed $J = 1$ front at 100\us\ (Sec.~\ref{sec:diagnostics}), $y \le 9$~mm; dashed: front digitized from Fig.~3(c) of Ref.~\onlinecite{Wang2026ast}, $y > 9$~mm. (b) The front of the reduced domain near the jet at 70\us; the base is the median of the front at $y = 4$--6~mm (shaded band). Performance is measured on the plane $x = 100$~mm, $y < 25$~mm.}\label{fig:schematic}
+\end{figure*}
+
+\subsection{Validation}\label{sec:validation}
+
+The mechanism's thermodynamic data, as read by the solver, give $c_p$ and $h$ identical to Cantera's \cite{Cantera} between 300 and 2500~K. A constant-pressure ignition at 1400~K, 280~kPa and equivalence ratio $\phi = 1$ reaches 1700~K at 84.8\us, against 86.1\us\ in Cantera. For the premixed \nh\ ODWs of Guo et al.\ \cite{Guo2023pci} on a 30\textdegree\ wedge at $\phi = 1$ and 0.2, the post-shock temperatures are 1454 and 1603~K (1452 and 1601~K there) and the initiation lengths 21.7 and 4.1~mm (19.8 and 3.47~mm there), with the same abrupt and smooth transitions.
+
+Reference~\onlinecite{Wang2026ast} is the only published simulation of a liquid jet anchoring an ODW in this configuration, and the comparison with it has a limited purpose: to show that the present set-up reproduces the same regimes (no ignition without a jet, direct initiation at the jet for $J = 1$, and the pre-vaporized case), not to validate the transient results, which have no published counterpart. Three open-wedge cases of Ref.~\onlinecite{Wang2026ast} were rerun with 0.2~mm cells: the two cases without a jet in near-wall crops of its domain that contain the stations compared, and the jet case on its full 250 $\times$ 100~mm domain. With pre-vaporized fuel and no jet (crop of 100 $\times$ 16~mm), the near-wall temperature at $x = 10$, 55 and 75~mm is within 3\% of the published values. With the droplet inflow and no jet (crop of 60 $\times$ 15~mm), the near-wall gas stays at 1110--1206~K for 60\us\ without igniting, as reported; this crop does not test ignition further downstream. With the jet at $J = 1$, a jet-induced ODW forms at the jet and the main ODW develops downstream, as reported for $J \ge 0.4$. This run was mapped from a crop state with the jet on and kept only 35 of about 30,000 droplet parcels, so it re-loaded droplets over roughly its first 25\us\ near the jet and 110\us\ across the domain; its times are not times from a clean start. Figure~\ref{fig:validation} compares its front height, the upper edge of the region above 1900~K, with the published front, whose time is not stated. At $x = 52$--70~mm the computed front lies 0.5--1.8~mm below the published one in the full domain and 1.5--2.8~mm below it in the reduced domain used for the jet cases. Near the jet, where the computed front was stationary, the comparison is independent of time; further downstream ($x > 75$~mm) the full-domain front was still rising when the run ended, so the larger offsets there (3--7~mm) carry no information. About 1~mm of the near-jet offset is the uncertainty of reading the published figure; the rest may come from inputs Ref.~\onlinecite{Wang2026ast} does not state: the droplet size spread, the droplet--wall model and the jet mass flow. Two further differences are discussed in Sec.~\ref{sec:baseline}: the near-wall layer behind the jet is warmer here, and the jet liquid stays closer to the wall. Both concern the dense near-wall liquid, whose role in the present results is examined in Sec.~\ref{sec:robust}.
+
+\begin{figure}
+\centering
+\includegraphics{figures_v2/fig_validation.pdf}
+\caption{Height of the $J = 1$ front (upper edge of the region above 1900~K) against $x$, compared with the front digitized from Ref.~\onlinecite{Wang2026ast}, Fig.~3(c), read to about $\pm$1~mm: full domain at 90 and 100\us, reduced domain at 70\us. Beyond $x = 120$~mm the main ODW of the full-domain run was still developing when the run ended.}\label{fig:validation}
+\end{figure}
+
+\subsection{Reduced domain and cases}\label{sec:cases}
+
+The full domain ($6.25 \times 10^5$ cells) is too costly for runs of 130\us\ after a change to the jet, so the jet cases use a reduced domain of 120 $\times$ 45~mm ($1.35 \times 10^5$ cells) with the same grid, boundary conditions and jet, started from the uniform freestream. Upstream of the jet its near-wall gas matches the full domain within 2\% in temperature and 0.4\% in pressure and velocity (at 70 and 95\us, the full-domain run being later because it re-loaded its droplets). A smaller domain of 90 $\times$ 35~mm gives the same base (Sec.~\ref{sec:diagnostics}) within 0.07~mm.
+
+Every jet setting restarts from the continuous $J = 1$ run at 70\us; that run, continued to 200\us, is the reference. The branch time is one at which the near-jet state matched the settled full-domain run: from 35\us\ the front at $y = 1$--4~mm lies at the full-domain position, and at 70\us\ the near-wall gas upstream of the jet agrees with it within 2\% in temperature, pressure and velocity (its vapor mass fraction, 0.086 against 0.093, within 8\%), the subsonic wall layer ends within 2~mm of its full-domain length, and the jet shock at $y = 3$~mm is at the same position. The upper front was then still approaching its final position by 0.2--1~mm per 5\us. Its base moves upstream from $x = 52.1$ to 51.3~mm by 110\us\ and then stays within 0.2~mm. The run is not steady: the liquid within $y < 3$~mm downstream of the jet grows from 2.7 to 7.6~mg by 200\us, so nearly all the jet liquid stays near the wall, whereas Ref.~\onlinecite{Wang2026ast} shows droplets spread further along it. All comparisons are made against the reference at equal times.
+
+The jet is switched as a square wave of frequency $f$ and duty cycle $D$, beginning with an on-phase, with off-time $T_\mathrm{off} = (1-D)/f$ and on-time $T_\mathrm{on} = D/f$ (Fig.~\ref{fig:schedule}). Each on-phase carries the continuous jet's mass flow at $J = 1$, so the mean jet fuel is nominally $D$ times that of the continuous jet. Over 70--200\us\ the continuous jet injects 5.38~mg and the 80~kHz, 50\% jet 2.79~mg, 3.7\% more than half, because the window ends inside an on-phase. Two steady jets carry half the fuel. One runs at half the velocity, which lowers $J$ to 0.25. The other keeps $J = 1$ on half the width, a single 0.2~mm wall face, with the parcels injected either into a cone from a one-cell disc on that face (cone injection) or uniformly over the face (patch injection, on a remapped mesh). Each injects 2.69~mg over 70--200\us.
+
+\begin{figure}
+\centering
+\includegraphics{figures_v2/fig_schedule.pdf}
+\caption{Jet mass flow (per 2~mm of depth) against time after the branch for three of the square-wave schedules: (a) 80~kHz at 50\% duty, (b) 120~kHz at 25\% duty and (c) 20~kHz at 50\% duty. Arrows mark one on-time and one off-time; dashed lines show the mean flow.}\label{fig:schedule}
+\end{figure}
+
+Further cases run in a crop of 100 $\times$ 25~mm around the jet, branched at 50\us\ from a continuous crop run, by which time the near-jet front of the reduced domain had been settled for 15\us\ and the crops on the 0.2 and 0.15~mm grids placed the front at $y = 3$~mm at the same position. Its upper boundary cuts the front near $x \approx 70$~mm, so the crop is used only for the base, and since it has no continuous run beyond 50\us\ its cases are compared with their position at the branch and with each other. Table~\ref{tab:cases} lists all cases. Restarting a run reproduces its base within one cell, but the attempt to change the random sequence of the droplet sub-models failed, so every case is a single realization.
+
+\begin{table*}
+\caption{Cases. Reduced-domain cases branch from the continuous $J = 1$ run at 70\us\ and crop cases from the continuous crop run at 50\us, unless noted. All runs use the 0.2~mm grid, rebound droplet walls and a slip gas wall, and save every 5\us, unless noted. Jet fuel is relative to the continuous 0.5~mm jet.}\label{tab:cases}
+\scriptsize
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.44\linewidth}lll@{}}
+\toprule
+Case & Jet and setup & $T_\mathrm{off}$ (\textmu s) & Jet fuel & Run (\textmu s)\\
+\midrule
+\multicolumn{5}{@{}l}{\textit{Reduced domain, 120 $\times$ 45~mm}}\\
+Reference & continuous, $J = 1$ & -- & 100\% & 0--200\\
+Smaller domain & continuous, 90 $\times$ 35~mm & -- & 100\% & 0--67\\
+Jet off & off & -- & 0 & 70--200\\
+Jet off, dry & off; all jet liquid removed & -- & 0 & 70--90\\
+Jet off, escape wall & off; droplets reaching the wall removed & -- & 0 & 70--81\\
+Jet off late & off at 165\us; saves every 0.5\us & -- & 0 & 165--195\\
+Jet on again & off, on again at 95\us & -- & -- & 70--130\\
+80, 40, 30, 20~kHz & $D = 0.5$ & 6.25, 12.5, 16.7, 25 & 50\% & 70--200\\
+80~kHz, restarted & as above, restarted at 125\us & 6.25 & 50\% & 125--200\\
+Half velocity & continuous, $J = 0.25$ & -- & 50\% & 70--200\\
+Half width, cone & continuous, $J = 1$, one face, cone injection & -- & 50\% & 70--200\\
+Half width, patch & as above, patch injection, remapped mesh & -- & 50\% & 70--200\\
+\midrule
+\multicolumn{5}{@{}l}{\textit{Crop, 100 $\times$ 25~mm}}\\
+Jet off & off & -- & 0 & 50--90\\
+Jet off, fine saves & off; saves every 0.5\us & -- & 0 & 50--75\\
+Jet off, grids & off; 0.15~mm, and 0.1~mm mapped at 35\us\ with saves every 1\us & -- & 0 & 50--90\\
+Jet off, plug removed & off; liquid at $x < 52.5$~mm, $y < 3$~mm removed & -- & 0 & 50--70\\
+Jet off, wall models & friction and stick droplet walls (from 20\us); no-slip gas wall (from 30\us) & -- & 0 & 50--90\\
+Jet off, dense parcels & 3--4 times the parcels at the same mass flows (from 20\us) & -- & 0 & 50--70\\
+Duty sweep & $D = 0.5$, 0.375, 0.25 at 80, 100, 120~kHz & 6.25 & 50, 37.5, 25\% & 50--90\\
+25\% duty & 160 and 80~kHz & 4.7, 9.4 & 25\% & 50--90\\
+1~mm jet & continuous $J = 1$ on four faces (0.8~mm), off at 50\us & -- & 200\%, then 0 & 0--80\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Diagnostics}\label{sec:diagnostics}
+
+Two front definitions are used, for two purposes. For every base position, hold, retreat and excursion, the front is the reacting shock, found along lines of constant $y$ (1--6~mm in steps of 1~mm, and 9--38~mm in steps of 3--4~mm) as the first cell, moving downstream, where the pressure has risen by a factor of at least 1.5 over the preceding 0.8~mm and burnt gas (CO + CO$_2$ mass fraction above 0.02) lies between 0.4~mm ahead of and 0.8~mm behind that cell. The factor 1.5 lies well below the pressure ratio of the front (4--10), so it selects the reacting shock rather than weaker waves, and the burnt-gas condition rejects the wedge shock upstream, where CO + CO$_2$ is zero. The base is the median of the front positions at $y = 4$, 5 and 6~mm, the lowest heights that the jet bow shock and the hot spots along the wall below $y \approx 3$~mm do not reach. The sensitivity of the results to these choices is given in Sec.~\ref{sec:robust}. For the comparison with Ref.~\onlinecite{Wang2026ast} only (Figs.~\ref{fig:schematic}(a) and~\ref{fig:validation}), the front height is the upper edge of the region above 1900~K, because the published front can be read only from the temperature map of Ref.~\onlinecite{Wang2026ast}, as the upper edge of its red band, which corresponds to about 1900~K.
+
+Ignition delays are computed with Cantera \cite{Cantera} for a homogeneous constant-pressure reactor with the same mechanism, as the time of peak heat release, from the local mean gas state upstream of the jet or from the frozen state behind a normal shock of the measured pressure ratio. The solver check in Sec.~\ref{sec:validation} instead compares the time to reach 1700~K, which both codes report directly.
+
+The hold time after switch-off is the time to the first save at which the base lies more than 1.5 cells (0.3~mm) further downstream than at switch-off. For the switch-off at 70\us\ the base is measured relative to the reference at equal times, because the reference still moves upstream until 110\us; at 165\us\ and in the crop it is measured from its own position. The retreat speed is the least-squares slope of the base over the following 20\us. Both are given as ranges over thresholds of 1.25--2.5 cells.
+
+The pulsed and equal-fuel cases fall into three groups by the largest excursion of the base from the reference: held (within about 2~mm throughout), oscillating (back and forth by 3--4~mm without a steady retreat) and lost (steady retreat to more than 8~mm behind by 200\us).
+
+The wall layer is the liquid within $y < 3$~mm at $x = 49.5$--100~mm, located by the $x$ below which 5, 25 and 50\% of its mass lies. The plug is the part of the wall layer at $x < 52.5$~mm.
+
+Total-pressure recovery and burnt fuel are measured on the plane $x = 100$~mm, $y < 25$~mm, which the stream processed by the jet crosses. Recovery is the mass-flux-weighted total pressure across the plane divided by that entering the domain; each cell's total pressure is the isentropic stagnation pressure at frozen composition, which matches Cantera to 0.005\%. Burnt fuel is the fuel-equivalent carbon in CO and CO$_2$ crossing the plane, reported with the unburnt \nh\ vapor. Gas cooled by evaporation without burning can have a frozen total pressure above the inflow value, so a save in 150--200\us\ is used only if at least 95\% of the mass flux lies in cells with positive flux and a total pressure below half the inflow value. The reference scatters from save to save by 0.002 in recovery and 0.02~g/s in burnt fuel (standard deviation over 150--200\us).
+
+\subsection{Numerical sensitivity}\label{sec:robust}
+
+The response to switch-off was computed in the crop on grids of 0.2, 0.15 and 0.1~mm (Fig.~\ref{fig:grid}). On the 0.15~mm grid the base stays within 0.55~mm of the 0.2~mm base. The 0.1~mm grid, mapped from the 0.2~mm crop 15\us\ before switch-off, gives a shorter hold and a faster retreat: the base moves 2.0~mm in the first 25\us\ instead of 1.4~mm, holds for 8--10\us\ instead of 12--15\us, and retreats at 0.093--0.099\mmus\ instead of 0.082--0.085\mmus. The displacement after switch-off is therefore uncertain by about 40\%. Only the jet-off case was run on the finer grids. The crop reproduces the reduced-domain base within 0.6~mm at equal times after switch-off.
+
+\begin{figure}
+\centering
+\includegraphics{figures_v2/fig_grid.pdf}
+\caption{Grid and domain sensitivity of the response to switch-off: (a) base and (b) front at $y = 9$~mm against time after the jet stops, in the reduced domain (0.2~mm, off at 70\us) and in the crop on the 0.2, 0.15 and 0.1~mm grids (off at 50\us). The 0.1~mm run is saved every 1\us\ and drawn without markers; the others are saved every 5\us.}\label{fig:grid}
+\end{figure}
+
+Changing the droplet--wall model (rebound with restitution 0.3 and friction 0.5, or droplets that stick) keeps the base within 0.4~mm to 90\us; a no-slip gas wall keeps it within one cell to 90\us, and three to four times as many parcels at the same mass flows do so to 70\us. Restarting a run from one of its saves reproduces its base within 0.2~mm, checked for two runs. The restarted fields are not bit-identical, so this is only a lower bound on the scatter between realizations.
+
+The liquid near the wall is dense. Over $x = 49.5$--80~mm, $y < 3$~mm it occupies 2.8\% of the volume, but it is concentrated in 250 wall cells, where it occupies 26\% of the volume at 18 times the gas mass, far outside the dilute limit of point-particle spray models \cite{Elghobashi1994}. These cells show a numerical defect: the \nh\ vapor mass fraction exceeds 1. The solver bounds each transported mass fraction only from below and sets N$_2$ to the remainder $1 - \sum Y_i$, clipped at zero, so in these cells N$_2$ is zero and the mass fractions sum to more than 1 (up to 1.47 in the crop at 90\us), and species mass is not conserved there. Of 35 scanned run segments (all but the duty-sweep, 0.5\us-save and 0.1~mm runs), 27 show it, in up to 42 cells per save in the reference and up to 224 in the patch-injected half-width jet and up to 177 in the half-velocity jet, where the largest value, 7.2, occurs. All such cells lie below $y = 3.5$~mm, so the base is never measured in them. On the performance plane they occur in three runs and carry at most 0.12~g/s of mass flux; they are left out of the fuel flows. The gas state of the wall layer, including the plug, is nonetheless not reliable.
+
+The upper front reaches the upper boundary of the reduced domain after 135--150\us; in the jet-off and 20~kHz runs the meeting point then moves upstream, to $x \approx 95$~mm by 200\us. The subsonic regions behind the front stay below $y \approx 30$~mm and are separated from that boundary by supersonic flow, so the boundary cannot influence the base, and its shocked part is excluded from the inflow total pressure.
+
+\subsection{Use of AI tools}\label{sec:ai}
+
+Claude (Anthropic; Claude Opus models, including Claude Opus 5.5), used through Claude Code, wrote and checked parts of the case-generation, analysis and plotting scripts, operated the cloud runs and searched the literature, to speed up these tasks; it was also used to revise the language of the manuscript. All data come from the simulations, and all figures and numbers from the scripts; none was generated or edited directly by the tool. The author reviewed and verified the code, the numbers and the text, and checked every reference against its source.
+
+\section{Results}\label{sec:results}
+
+\subsection{The jet-anchored front}\label{sec:baseline}
+
+The base sits at the foot of the jet-induced shock (Fig.~\ref{fig:baseline}). The gas approaching the jet along the wall carries an \nh\ vapor mass fraction of 0.086, and its ignition delay of 1.9~ms is far longer than its 24\us\ transit from the leading edge, so it does not ignite upstream. At the jet the front at $y = 1$--4~mm is a shock of pressure ratio 6.1--8.9, behind which the ignition delay falls to 0.11--0.70\us. Behind the front the gas moves at 1080--1840~m/s at $y = 3$--15~mm and crosses the first 20~mm in 11--19\us; this is the flow-through time used below.
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_baseline.pdf}
+\caption{Near-jet structure of the $J = 1$ reference at 70\us. (a) Numerical schlieren, $\exp(-15|\nabla\rho|/G)$, where $G$ is the 99.5th percentile of $|\nabla\rho|$. (b) Temperature with jet and freestream droplet parcels (dots, 6000 drawn at random); the blue contour is the sonic line, where the local Mach number $M$ is 1. (c) \textit{n}-C$_7$H$_{16}$ vapor mass fraction.}\label{fig:baseline}
+\end{figure*}
+
+Behind the jet the liquid forms a cold, fuel-rich layer along the wall. At 80\us\ the gas within 1~mm of the wall is at least 20\% \nh\ vapor from the jet to the outflow; on average it is at 704~K with a vapor mass fraction of 0.48 and almost no oxygen, and its first 13~mm are subsonic. Within 30~mm of the jet and 3~mm of the wall lie 3.1~mg of liquid with a mass-weighted diameter of 5.8\um. Reference~\onlinecite{Wang2026ast} reports about 500~K along its near-wall streamline for $J \ge 0.5$, so the layer is a known difference from that study. The liquid barely evaporates: with the jet off it falls only from 2.72 to 2.61~mg between 5 and 25\us\ after switch-off, consistent with a $d^2$-law lifetime of about 230\us\ for a 5\um\ droplet at the observed droplet temperature of 399~K and the 418~K of the gas around the droplets (Spalding number 0.59) \cite{NIST,Spalding1953}.
+
+\subsection{Switching the jet off}\label{sec:off}
+
+The detonation survives the loss of its jet to the end of the run (Figs.~\ref{fig:off}(a) and~\ref{fig:offsnap}). The base holds, then moves downstream, reaching $x = 59.9$~mm at 200\us\ while the reference base stays at 51.1--51.5~mm. The front higher up moves less: at $y = 15$~mm it stays within 1.2~mm of its position until 160\us. Near the wall the front weakens; at the base heights its pressure ratio falls from 7--10 to 4.4--4.9 after 145\us, while it stays at 7--9 in the reference. Whether the lower front is still a coupled detonation after that time is not established.
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_off.pdf}
+\caption{Base after switch-off. (a) Reduced domain, jet off at 70\us\ (black dotted line): reference (black), jet off with the liquid left in place (grey), dry, with all jet liquid removed at switch-off (aqua), and jet on again at 95\us\ (blue, blue dotted line). (b) Base displacement from its own position at switch-off, at 70 and 165\us\ in the reduced domain and at 50\us\ in the crop, with the liquid left in place, with the plug removed (crop) and with all jet liquid removed (reduced domain). The dotted line marks the 0.3~mm hold threshold; runs saved every 0.5\us\ are drawn without markers.}\label{fig:off}
+\end{figure*}
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_offsnap.pdf}
+\caption{Temperature and droplet parcels (dots) near the jet at (a) 0, (b) 10, (c) 25 and (d) 55\us\ after switch-off at 70\us. The temperature scale is clipped at 3200~K. The cold region behind the front in (d), below 600~K over $x = 60$--90~mm and up to $y = 13$~mm, is unburnt gas of the wall layer with an \nh\ vapor mass fraction of about 0.6.}\label{fig:offsnap}
+\end{figure*}
+
+The base holds for 11.5--20\us\ and then retreats at 0.07--0.10\mmus\ (Fig.~\ref{fig:off}(b)). Switched off at 70\us, it holds for 15--20\us\ and retreats at 0.10\mmus; switched off at 165\us\ with finer saves, it holds for 11.5--15\us\ and retreats at 0.073--0.078\mmus; in the crop it holds for 12--15\us\ and retreats at 0.082--0.085\mmus. The difference between the two switch-off times exceeds the save interval, so the hold depends on the state at switch-off. The hold is of the same order as the flow-through time of 11--19\us.
+
+The liquid left at the jet lengthens the hold, but only part of the hold depends on it. With all jet liquid removed at switch-off, the base holds for 10\us\ instead of 15--20\us\ and moves 3.4~mm in the first 20\us\ instead of 0.8~mm. Removing only the plug in the crop gives a similar result: a hold of 10\us\ instead of 15\us\ and a displacement of 2.8~mm instead of 1.0~mm. The hold differences are one to two save intervals; the displacement differences are 9--13 cells. The base starts to move before the plug is gone. The plug holds 1.13~mg at switch-off and 0.71~mg 10\us\ later, and empties 20--25\us\ after switch-off (Fig.~\ref{fig:edge}(a)). Removing droplets that reach the wall leaves the base unchanged, but that run ends within the hold.
+
+The base does not follow the wall layer as a whole (Fig.~\ref{fig:edge}(a)). The layer's 25\% point moves at 0.157\mmus, twice as fast as the base. The data show that the liquid near the jet delays the retreat, but not by what process. After the base has moved, the cold gas of the wall layer spreads behind the front. With the jet on it is confined below $y = 0.9$~mm. By 55\us\ after switch-off, gas below 600~K covers $x = 60$--90~mm up to $y = 13$~mm, with an \nh\ vapor mass fraction of 0.61, too rich to burn (Fig.~\ref{fig:offsnap}(d)).
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_edge.pdf}
+\caption{Base and wall layer after the jet is switched at 50\us\ in the crop: (a) 0.5~mm jet off, (b) 80~kHz at 25\% duty (shaded: jet off), (c) 1~mm jet off. Top: base (black), and the $x$ below which 25\% (dashed) and 5--50\% (band) of the wall-layer liquid ($y < 3$~mm, $x = 49.5$--100~mm) lies. Bottom: liquid mass in the wall layer and in the plug ($x < 52.5$~mm).}\label{fig:edge}
+\end{figure*}
+
+A 1~mm jet may hold longer (Fig.~\ref{fig:edge}(c)). It anchors the base 1.4~mm further upstream and leaves twice the wall liquid (4.06 against 1.97~mg). After switch-off its base first moves 0.4~mm upstream and then holds. Counted from switch-off it holds for 25--30\us\ against 15\us\ for the 0.5~mm jet at the same 5\us\ save interval; counted from its upstream point, 20\us, one save longer. Its four wall faces (0.8~mm) carry twice the mass flow of the 0.5~mm jet, so its momentum flux per unit area is the same, 1.25 times nominal. The run ends 30\us\ after switch-off and only two widths were run, so how the hold scales with jet size is not established.
+
+When the jet is switched on again at 95\us, after 25\us\ off, the base keeps moving downstream for about 15\us\ and then stops 3.0--3.2~mm behind the reference. It shows no sign of return within the 35\us\ simulated (Fig.~\ref{fig:off}(a)).
+
+\subsection{Duty cycle}\label{sec:duty}
+
+At a fixed off-time of 6.25\us, shorter than every hold, the duty cycle decides the outcome (Fig.~\ref{fig:duty}(a)). At 50\% duty the base is held; at 25\% it retreats as with the jet off. At 50\% duty (80~kHz) it stands 0.8~mm downstream of its starting position 40\us\ after the branch. At 37.5\% (100~kHz) it follows the 50\% case for 20\us\ and then falls back by 2~mm. At 25\% (120~kHz) it ends at $x = 55.1$~mm, near the jet-off base at 54.7~mm. Shorter and longer off-times at 25\% duty, 4.7 and 9.4\us, give the same result (Fig.~\ref{fig:duty}(b)). Liquid near the jet does not by itself hold the base: at 25\% duty and 80~kHz the wall layer gains 7\% of its liquid over 40\us, yet its 25\% point moves downstream at 0.127\mmus\ (Fig.~\ref{fig:edge}(b)).
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_duty.pdf}
+\caption{Base in the crop under pulsing from 50\us: (a) $D = 0.5$, 0.375 and 0.25 at a fixed off-time of 6.25\us; (b) $D = 0.25$ at off-times of 4.7, 6.25 and 9.4\us. Black: continuous jet before the branch; grey: jet off. No continuous crop run exists after 50\us. Saves every 5\us.}\label{fig:duty}
+\end{figure*}
+
+\subsection{Pulse frequency at 50\% duty}\label{sec:pulsed}
+
+At 50\% duty the base is held at 80~kHz and oscillates at 20--40~kHz (Fig.~\ref{fig:pulsed}). At 80~kHz it lies at most 1.2~mm behind the reference and shows no drift over 150--200\us. At 20, 30 and 40~kHz the off-times of 12.5--25\us\ are as long as the hold or longer. The base falls 3.0--4.2~mm behind the reference and returns, ending 0.6--2.2~mm behind at 200\us, against 8.6~mm with the jet off. The returns upstream are abrupt, 1.0--1.8~mm within one save, and two of the three occur during off-phases. The runs cover only 2.6 cycles at 20~kHz and 3.9 at 30~kHz, so they do not show whether the oscillations are bounded or define a critical frequency.
+
+\begin{figure}
+\centering
+\includegraphics{figures_v2/fig_pulsed.pdf}
+\caption{Base under pulsing at 50\% duty from 70\us\ (blue): (a) 80~kHz, (b) 40~kHz, (c) 30~kHz, (d) 20~kHz. Shaded bands mark jet-off phases. Black: reference; grey: jet off.}\label{fig:pulsed}
+\end{figure}
+
+\subsection{Pulsed and steady jets at equal fuel}\label{sec:equalfuel}
+
+At half the jet fuel, the 80~kHz pulse holds the base and the throttled jet loses it (Fig.~\ref{fig:equalfuel}). At half velocity ($J = 0.25$) the base ends 9.2~mm behind the reference at 200\us, close to the jet-off base, although a reacting front remains. For the half-width jet at $J = 1$ the outcome depends on how the injection is represented. With patch injection the base is held, ending 2.0~mm behind the reference and about 1~mm behind the 80~kHz base. With cone injection it drifts slowly until 145\us\ and is then lost, ending 10.8~mm behind. The patch-injected and half-velocity runs also have the most cells with a vapor mass fraction above 1 (Sec.~\ref{sec:robust}).
+
+\begin{figure}
+\centering
+\includegraphics{figures_v2/fig_equalfuel.pdf}
+\caption{Base for jets carrying 50\% of the continuous-jet fuel from 70\us: the 80~kHz pulse at 50\% duty, the jet at half velocity ($J = 0.25$), and the half-width jet at $J = 1$ with patch (solid) and cone (dashed) injection, with the reference and the jet-off case.}\label{fig:equalfuel}
+\end{figure}
+
+\subsection{Performance on the measurement plane}\label{sec:performance}
+
+Recovery on the plane $x = 100$~mm does not separate a held base from a lost one (Table~\ref{tab:performance}, Fig.~\ref{fig:performance}). In the reference the stream processed by the jet loses 88\% of its total pressure by the plane. Over 150--200\us\ every half-fuel jet exceeds the reference by 0.006--0.031, including those whose bases are lost. The pulsed cases scatter by up to 0.06 from save to save, so their differences are not distinguishable from zero. This is plausibly because a weaker jet shock and a front further downstream both raise recovery. Recovery on the plane responds to a change at the jet only after 35--50\us.
+
+\begin{table}
+\caption{Performance on the plane $x = 100$~mm, $y < 25$~mm: total-pressure recovery $R$, burnt fuel $\dot m_b$ and unburnt \nh\ vapor $\dot m_v$, per 2~mm of depth. Over 125--145\us\ all five saves are used (jet off: 125--130\us); --: not evaluated. Over 150--200\us\ only saves that pass the validity test are used, their number out of 11 is given, and values are differences from the reference over the same saves; the reference there has $R = 0.117$ and $\dot m_b = 2.36$~g/s. Vapor uses all 11 saves.}\label{tab:performance}
+\footnotesize
+\begin{tabular}{@{}lllllll@{}}
+\toprule
+ & \multicolumn{2}{l}{125--145\us} & \multicolumn{4}{l}{150--200\us}\\
+Case & $R$ & $\dot m_b$ (g/s) & Valid saves & $\Delta R$ & $\Delta \dot m_b$ (g/s) & $\dot m_v$ (g/s)\\
+\midrule
+Reference & 0.117 & 2.37 & 11 & -- & -- & 1.00\\
+80~kHz & 0.116 & 2.41 & 8 & +0.031 & $-$0.15 & 3.21\\
+80~kHz, restarted & -- & -- & 7 & +0.029 & $-$0.13 & 3.11\\
+40~kHz & 0.116 & 2.41 & 5 & +0.006 & $-$0.03 & 3.42\\
+30~kHz & -- & -- & 6 & +0.018 & $-$0.19 & 5.79\\
+20~kHz & 0.107 & 2.32 & 7 & +0.013 & $-$0.41 & 13.23\\
+Half width, cone & 0.123 & 2.44 & 11 & +0.027 & +0.12 & 1.60\\
+Half width, patch & -- & -- & 11 & +0.014 & $-$0.11 & 1.80\\
+Half velocity & 0.137 & 2.48 & 11 & +0.028 & +0.21 & 2.07\\
+Jet off & 0.075 & 2.03 & 3 & \multicolumn{3}{l}{not valid}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pulsing burns less fuel on the plane and leaves more vapor unburnt. Over 150--200\us\ the pulsed jets, with half the jet fuel, burn up to 0.41~g/s less than the reference (the 40~kHz difference, 0.03~g/s, is comparable to the scatter), while the cone-injected and half-velocity jets, which lose the base, burn 0.12 and 0.21~g/s more. The scatter of burnt fuel is known only from the reference and the restarted 80~kHz run (0.02~g/s). The pulsed jets leave 3.2, 3.4, 5.8 and 13.2~g/s of vapor unburnt at 80, 40, 30 and 20~kHz, against 1.0~g/s for the reference and 1.6--2.1~g/s for the steady half-fuel jets, and at 80~kHz the vapor reaches $y \approx 6$~mm instead of staying below 3~mm. Because most of the jet liquid stays on the wall within the run, burnt fuel per unit of fuel supplied is not a measure of combustion efficiency here.
+
+\begin{figure*}
+\centering
+\includegraphics{figures_v2/fig_performance.pdf}
+\caption{Performance on the plane $x = 100$~mm, $y < 25$~mm over 150--200\us, per 2~mm of depth. (a) Recovery and (b) burnt fuel as the case minus the reference at each save that passes the validity test in both (grey) and their mean (blue); ``lost'' marks the cases whose base is lost. (c) Unburnt \nh\ vapor per millimeter of height, averaged over all saves in the bands $y = 0$--1, 1--3, 3--6 and 6--10~mm.}\label{fig:performance}
+\end{figure*}
+
+\section{Discussion}\label{sec:discussion}
+
+The hold after switch-off has two parts. About 10\us\ remains without any jet liquid, and the liquid near the jet adds 5--10\us\ and cuts the early displacement from about 3 to 1~mm. The total, 11.5--20\us, is comparable to the 11--19\us\ in which gas crosses the first 20~mm behind the front. This is a comparison of order, not a mechanism: the hold also depends on the state at switch-off and on the grid.
+
+In these runs, holding the base under pulsing needed two conditions: an off-time shorter than the hold, and on-phases long enough. For pulsed jets in crossflow the second is expressed by the stroke ratio $L/d = u_j T_\mathrm{on}/d_j$, which with the duty cycle governs the jet structure \cite{Johari2006,Sau2010,Karagozian2010}. At the off-time of 6.25\us\ the base is held at $L/d = 0.76$ (50\% duty), held only briefly at 0.46 (37.5\%) and not held at 0.19--0.38 (25\%). At 20--40~kHz the on-phases are long ($L/d = 1.5$--3.0), but the off-phases are as long as the hold, and the base oscillates. Its abrupt returns, mostly during off-phases, suggest that the response is not a simple delay of the forcing.
+
+The survival of the front without its jet contrasts with the hot-jet experiments of Han et al.\ \cite{Han2012hotjet}, in which the ODW decoupled when the jet weakened. There a hot gaseous jet initiated the wave in a premixed flow by heat; here a cold liquid jet initiates it through its shock and leaves fuel-rich liquid and vapor near the wall. The cavity-jet ODW of Liu et al.\ \cite{Liu2026cavity} also outlasted its jet, held by the cavity edge. In pulsed energy deposition \cite{Jiang2025energy}, each pulse initiates a new detonation and the critical frequency is set by how soon successive waves arrive; here the detonation persists through the off-phase, and what must be bridged is the hold at the base.
+
+At half the fuel, pulsing at 80~kHz kept the base and throttling to $J = 0.25$ did not. A fixed injector throttled to half its flow reaches exactly that value, because $J$ falls as the square of the flow, and $J = 0.25$ lies below the range $J \ge 0.4$ in which the jet's shock initiates the ODW directly \cite{Wang2026ast}. A throttled jet at $J = 0.4$--0.5 was not run, and the comparison rests on one frequency, one duty and single realizations. The two half-width jets, both at $J = 1$, differ in outcome, so the result depends on how a narrow jet is represented, not on $J$ alone. Pulsing brings no gain on the plane downstream: recovery does not change beyond the scatter, and unburnt vapor grows as the frequency falls.
+
+Four limits bound these conclusions. First, the switching is an idealized square wave; 80~kHz at 50\% duty means a Strouhal number $f d_j/u_j = 0.66$ and full on--off switching, beyond the rates demonstrated for pulsed gaseous injectors (about 13~kHz \cite{Cutler2001}) and liquid-fuel valves (about 1~kHz \cite{Lovett2008}), so the result indicates what a jet of this size needs rather than a design point. Second, the liquid that lengthens the hold sits where the spray is dense and the solver's vapor mass fraction exceeds 1; a wall-film model, a voidage-corrected drag or a bounded species treatment could change it. Third, the simulations are two-dimensional and laminar with a slip wall, and the displacement after switch-off changes by about 40\% between the 0.2 and 0.1~mm grids. Fourth, every case is a single realization: the restart scatter of 0.2~mm is only a lower bound, while two representations of the same half-width jet end 9~mm apart. Differences within a group are therefore not resolved, and only the groups themselves, held, oscillating and lost, are used.
+
+\section{Conclusions}\label{sec:conclusions}
+
+Two-dimensional Eulerian--Lagrangian simulations of an \nh\ spray ODW anchored by a transverse liquid jet at $J = 1$, each case a single realization in a dense near-wall spray, give the following results.
+
+% REVISION: numbers below are from the submitted runs; update after the corrected-solver and 0.1 mm runs.
+The detonation survives the loss of its jet for the 130\us\ simulated, but its lower part weakens, to a pressure ratio of 4--5 after 75\us\ without the jet. The near-wall end of the front, the base, first holds its position, for 11.5--20\us\ on the 0.2~mm grid and 8--10\us\ on the 0.1~mm grid, comparable to the time the burnt gas takes to cross the first 20~mm behind the front, and then retreats at 0.07--0.10\mmus. About 10\us\ of the hold remains when all jet liquid is removed; the liquid left near the jet lengthens it. A jet switched on again after 25\us\ had not returned the base to the jet 35\us\ later.
+
+A pulsed jet holds the base only if its off-time is shorter than the hold and each pulse is long enough. At an off-time of 6.25\us, 50\% duty holds the base and 25\% duty does not. At 50\% duty, 80~kHz keeps the base within 1.2~mm of its position with the continuous jet, while at 20--40~kHz, with off-times as long as the hold, the base moves back and forth by 3--4~mm. At half the jet fuel, the 80~kHz pulse holds the base, whereas the same injector throttled to half its flow, which lowers $J$ to 0.25, loses it. A steady jet of half the width at $J = 1$ holds or loses it depending on how its injection is represented, so pulsing shows no robust advantage over a narrower steady jet. Neither pulsing nor throttling changes the total-pressure recovery 50~mm downstream beyond the scatter, and the pulsed jets leave 3 to 13 times the unburnt vapor of the continuous jet, more at lower frequency.
+
+For an oblique detonation engine the result is a requirement rather than a demonstrated benefit. Pulsing gives no gain downstream; its one advantage is that a fixed injector can be turned down to half its fuel while the detonation stays anchored at the jet, which throttling cannot achieve. For the 0.5~mm jet this needs off-times below about 6~\textmu s, or 80~kHz at 50\% duty, with the flow fully switched. Pulsed gaseous injectors for supersonic crossflows have reached about 13~kHz with full modulation \cite{Cutler2001}, and liquid-fuel valves for active combustion control about 1~kHz with partial modulation \cite{Lovett2008}, so this rate is beyond demonstrated fuel actuation. A jet twice as wide held for about one output interval longer and moved half as far in the 30\us\ simulated, so whether the required rate falls with jet size, which would bring it within reach, remains open. These conclusions rest on two-dimensional, laminar simulations with a slip wall, single realizations of each case, and a displacement after switch-off that changes by about 40\% between the 0.2 and 0.1~mm grids.
+
+\begin{acknowledgments}
+The author thanks Tsingyoung Meng (The Hong Kong Polytechnic University) for the 44-species \nh\ mechanism files. The simulations were run on rented Amazon Web Services EC2 c7a.4xlarge (16 vCPUs, 32~GiB) and c7a.8xlarge (32 vCPUs, 64~GiB) instances. This work received no external funding. The use of AI tools is described in Sec.~\ref{sec:ai}. The author directed the study, chose the cases and their interpretation, and takes full responsibility for the content.
+\end{acknowledgments}
+
+\section*{Author declarations}
+\subsection*{Conflict of interest}
+The author has no conflicts to disclose.
+\subsection*{Author contributions}
+\textbf{Yuvan Senthilkumar:} Conceptualization (lead); Methodology (lead); Software (lead); Validation (lead); Formal analysis (lead); Investigation (lead); Data curation (lead); Visualization (lead); Writing -- original draft (lead); Writing -- review \& editing (lead).
+
+\section*{Data availability}
+The data that support the findings of this study are openly available in Zenodo at \url{https://doi.org/10.5281/zenodo.23676003}, Ref.~\onlinecite{Zenodo2026}. The record contains the case generator, run and analysis scripts, the extracted data behind every figure and the scripts that reproduce the numbers in the paper. The simulation fields of most runs, the case logs and the solver containers are openly available in Zenodo at \url{https://doi.org/10.5281/zenodo.23676091}, Ref.~\onlinecite{Zenodo2026fields}; fields not yet in that record are available from the author upon reasonable request. The solver is detonationFoam, two-phase development branch, commit 02ed90db0a17, on OpenFOAM-8 commit a86b07b9dabb.
+
+\begin{thebibliography}{99}
+
+\bibitem{Kailasanath2000} K. Kailasanath, ``Review of propulsion applications of detonation waves,'' AIAA J. \textbf{38}, 1698--1708 (2000).
+
+\bibitem{Jiang2023review} Z. Jiang, ``Standing oblique detonation for hypersonic propulsion: A review,'' Prog. Aerosp. Sci. \textbf{143}, 100955 (2023).
+
+\bibitem{Rosato2021} D. A. Rosato, M. Thornton, J. Sosa, C. Bachman, G. B. Goodwin, and K. A. Ahmed, ``Stabilized detonation for hypersonic propulsion,'' Proc. Natl. Acad. Sci. U.S.A. \textbf{118}, e2102244118 (2021).
+
+\bibitem{Zhang2022exp} Z. Zhang, C.-Y. Wen, C. Yuan, Y. Liu, G. Han, C. Wang, and Z. Jiang, ``An experimental study of formation of stabilized oblique detonation waves in a combustor,'' Combust. Flame \textbf{237}, 111868 (2022).
+
+\bibitem{Han2023trip} X. Han, Y. Liu, Z. Zhang, W. Zhang, C. Yuan, G. Han, and Z. Jiang, ``Experimental demonstration of forced initiation of kerosene oblique detonation by an on-wedge trip in an ODE model,'' Combust. Flame \textbf{258}, 113102 (2023).
+
+\bibitem{ZhangWen2025} Z. Zhang and C.-Y. Wen, ``Oblique detonation engine: Initiation and stabilization of oblique detonation waves in confined spaces,'' Acta Aerodyn. Sin. \textbf{43}, 65--91 (2025) (in Chinese).
+
+\bibitem{Qin2018modified} Q. Qin and X. Zhang, ``A novel method for trigger location control of the oblique detonation wave by a modified wedge,'' Combust. Flame \textbf{197}, 65--77 (2018).
+
+\bibitem{Zhang2026bump} Y. Zhang, X. Zheng, and G. Xiang, ``Bump-induced oblique detonation waves: Shock/boundary-layer effects,'' AIAA J. \textbf{64}, 352--372 (2026).
+
+\bibitem{Yan2026bump} C. Yan and B. Zhang, ``Initiation and propulsive performance of bump-induced oblique detonation waves,'' AIAA J. \textbf{64}, 3974--3989 (2026).
+
+\bibitem{Sun2023unsteady} J. Sun, P. Yang, B. Tian, and Z. Chen, ``Evolution and control of oblique detonation wave structure in unsteady inflow,'' AIAA J. \textbf{61}, 4808--4820 (2023).
+
+\bibitem{Xin2024laser} Y. Xin, J. Shang, G. Xiang, and Q. Wang, ``Investigation on accelerated initiation of oblique detonation wave induced by laser-heating hot-spot,'' Aerospace \textbf{11}, 485 (2024).
+
+\bibitem{Jiang2025energy} Z. Jiang, Z. Chen, L. Shi, Z. Zhang, J. Hao, and C.-Y. Wen, ``Numerical study of oblique detonation initiation assisted by local energy deposition,'' Aerosp. Sci. Technol. \textbf{168}, 111278 (2026).
+
+\bibitem{Wang2022hotjet} A. Wang, J. Bian, and H. Teng, ``Numerical study on initiation of oblique detonation wave by hot jet,'' Appl. Therm. Eng. \textbf{213}, 118679 (2022).
+
+\bibitem{Li2020hotjet} H. Li, J. Li, C. Xiong, W. Fan, L. Zhao, and W. Han, ``Investigation of hot jet on active control of oblique detonation waves,'' Chin. J. Aeronaut. \textbf{33}, 861--869 (2020).
+
+\bibitem{Qin2020coflow} Q. Qin and X. Zhang, ``Study on the initiation characteristics of the oblique detonation wave by a co-flow hot jet,'' Acta Astronaut. \textbf{177}, 86--95 (2020).
+
+\bibitem{Han2012hotjet} X. Han, J. Zhou, and Z.-Y. Lin, ``Experimental investigations of detonation initiation by hot jets in supersonic premixed flows,'' Chin. Phys. B \textbf{21}, 124702 (2012).
+
+\bibitem{Han2024jet} X. Han, R. Qiu, and Y. You, ``Flow characteristics and propulsive performance of oblique detonation waves induced by a transverse jet,'' Phys. Fluids \textbf{36}, 076133 (2024).
+
+\bibitem{ZhangJiang2023jet} Z. Zhang and Z. Jiang, ``Numerical investigation of transverse-jet-assisted initiation of oblique detonation waves in a combustor,'' Aerospace \textbf{10}, 1033 (2023).
+
+\bibitem{Yao2023jetwedge} J. Yao and Z. Lin, ``Numerical investigation of jet-wedge combinatorial initiation for oblique detonation wave in supersonic premixed mixture,'' Phys. Fluids \textbf{35}, 026101 (2023).
+
+\bibitem{Ren2025mach} C. Ren, X. Cai, R. Deiterding, and X. Wang, ``Mechanism of Mach stem-induced initiation in non-uniform supersonic inflow with transverse injection,'' Phys. Fluids \textbf{37}, 101704 (2025).
+
+\bibitem{Fan2024sweeping} J. Fan, Y. Zhang, G. Xiang, and Y. Feng, ``Numerical investigation of sweeping jet actuator on oblique detonation,'' Combust. Flame \textbf{268}, 113622 (2024).
+
+\bibitem{Liu2026cavity} X. Liu, Z. Tang, J. Wang, and S. Chen, ``A method of oblique detonation wave initiation control with cavity-jet combination,'' Aerosp. Sci. Technol. \textbf{170}, 111596 (2026).
+
+\bibitem{Ren2018jfm} Z. Ren, B. Wang, G. Xiang, and L. Zheng, ``Effect of the multiphase composition in a premixed fuel--air stream on wedge-induced oblique detonation stabilisation,'' J. Fluid Mech. \textbf{846}, 411--427 (2018).
+
+\bibitem{Ren2019pci} Z. Ren, B. Wang, G. Xiang, and L. Zheng, ``Numerical analysis of wedge-induced oblique detonations in two-phase kerosene--air mixtures,'' Proc. Combust. Inst. \textbf{37}, 3627--3635 (2019).
+
+\bibitem{Teng2023droplet} H. Teng, C. Tian, P. Yang, and M. Zhao, ``Effect of droplet diameter on oblique detonations with partially pre-vaporized n-heptane sprays,'' Combust. Flame \textbf{258}, 113062 (2023).
+
+\bibitem{Tian2024jfm} C. Tian, H. Teng, B. Shi, P. Yang, K. Wang, and M. Zhao, ``Propagation instabilities of the oblique detonation wave in partially prevaporized n-heptane sprays,'' J. Fluid Mech. \textbf{984}, A16 (2024).
+
+\bibitem{Guo2023cnf} H. Guo, Q. Meng, Y. Xu, and H. Zhang, ``Autoignition of two-phase n-heptane/air mixtures behind an oblique shock: Insights into spray oblique detonation initiation,'' Combust. Flame \textbf{256}, 112992 (2023).
+
+\bibitem{Guo2025cnf} H. Guo, Y. Sun, R. Zhu, S. Wang, M. Zhao, B. Shi, and X. Hou, ``Inhibition of the oblique detonation wave detachment in two-phase n-heptane/air mixtures,'' Combust. Flame \textbf{272}, 113843 (2025).
+
+\bibitem{Wu2026heptane} Y.-J. Wu, J.-Y. Chen, and Y.-Y. Niu, ``Analysis of the initiation and transient dynamics of n-heptane oblique detonation waves using a robust three-step chemical kinetics model,'' Phys. Fluids \textbf{38}, 087502 (2026).
+
+\bibitem{Wang2025cnf} W. Wang, Z. Hu, and P. Zhang, ``Computational investigation on the formation of liquid-fueled oblique detonation waves,'' Combust. Flame \textbf{271}, 113839 (2025).
+
+\bibitem{Wang2026ast} W. Wang, Z. Hu, and P. Zhang, ``Liquid-fueled oblique detonation waves induced by reactive and non-reactive transverse liquid jets,'' Aerosp. Sci. Technol. \textbf{168}, 111293 (2026).
+
+\bibitem{Yang2019jfm} P. Yang, H. D. Ng, and H. Teng, ``Numerical study of wedge-induced oblique detonations in unsteady flow,'' J. Fluid Mech. \textbf{876}, 264--287 (2019).
+
+\bibitem{Yang2021pof} P. Yang, H. D. Ng, and H. Teng, ``Unsteady dynamics of wedge-induced oblique detonations under periodic inflows,'' Phys. Fluids \textbf{33}, 016107 (2021).
+
+\bibitem{Ren2021osc} Z. Ren, B. Wang, and L. Zheng, ``Wedge-induced oblique detonation waves in supersonic kerosene-air premixing flows with oscillating pressure,'' Aerosp. Sci. Technol. \textbf{110}, 106472 (2021).
+
+\bibitem{Wang2026confined} W. Wang, Z. Hu, and P. Zhang, ``Liquid-fueled oblique detonation stabilized by a transverse jet,'' arXiv:2605.27871 (2026).
+
+\bibitem{Liu2018hysteresis} Y. Liu, L. Wang, B. Xiao, Z. Yan, and C. Wang, ``Hysteresis phenomenon of the oblique detonation wave,'' Combust. Flame \textbf{192}, 170--179 (2018).
+
+\bibitem{Han2025hysteresis} X. Han, R. Qiu, and Y. You, ``Hysteresis phenomenon in oblique detonation wave/boundary layer interactions,'' Combust. Flame \textbf{281}, 114399 (2025).
+
+\bibitem{Sutherland1893} W. Sutherland, ``The viscosity of gases and molecular force,'' Philos. Mag. \textbf{36}, 507--531 (1893).
+
+\bibitem{Liu2004mech} S. Liu, J. C. Hewson, J. H. Chen, and H. Pitsch, ``Effects of strain rate on high-pressure nonpremixed n-heptane autoignition in counterflow,'' Combust. Flame \textbf{137}, 320--339 (2004).
+
+\bibitem{Hairer1996} E. Hairer and G. Wanner, \textit{Solving Ordinary Differential Equations II: Stiff and Differential-Algebraic Problems}, 2nd ed. (Springer, Berlin, 1996).
+
+\bibitem{Liu1993drag} A. B. Liu, D. Mather, and R. D. Reitz, ``Modeling the effects of drop drag and breakup on fuel sprays,'' SAE Technical Paper 930072 (1993).
+
+\bibitem{Ranz1952} W. E. Ranz and W. R. Marshall, ``Evaporation from drops, Part I,'' Chem. Eng. Prog. \textbf{48}, 141--146 (1952).
+
+\bibitem{Pilch1987} M. Pilch and C. A. Erdman, ``Use of breakup time data and velocity history data to predict the maximum size of stable fragments for acceleration-induced breakup of a liquid drop,'' Int. J. Multiphase Flow \textbf{13}, 741--757 (1987).
+
+\bibitem{Crowe1977} C. T. Crowe, M. P. Sharma, and D. E. Stock, ``The particle-source-in cell (PSI-CELL) model for gas-droplet flows,'' J. Fluids Eng. \textbf{99}, 325--332 (1977).
+
+\bibitem{Sun2023detonationfoam} J. Sun, Y. Wang, B. Tian, and Z. Chen, ``detonationFoam: An open-source solver for simulation of gaseous detonation based on OpenFOAM,'' Comput. Phys. Commun. \textbf{292}, 108859 (2023).
+
+\bibitem{detonationFoamSoftware} J. Sun, detonationFoam, branch detonationFoam-dev(two-phase), commit 02ed90db0a17, \url{https://github.com/JieSun-pku/detonationFoam} (2026).
+
+\bibitem{Weller1998} H. G. Weller, G. Tabor, H. Jasak, and C. Fureby, ``A tensorial approach to computational continuum mechanics using object-oriented techniques,'' Comput. Phys. \textbf{12}, 620--631 (1998).
+
+\bibitem{Kurganov2001} A. Kurganov, S. Noelle, and G. Petrova, ``Semidiscrete central-upwind schemes for hyperbolic conservation laws and Hamilton--Jacobi equations,'' SIAM J. Sci. Comput. \textbf{23}, 707--740 (2001).
+
+\bibitem{Wang2024breakup} W. Wang, M. Yang, Z. Hu, and P. Zhang, ``A dynamic droplet breakup model for Eulerian--Lagrangian simulation of liquid-fueled detonation,'' Aerosp. Sci. Technol. \textbf{151}, 109271 (2024).
+
+\bibitem{Abramzon1989} B. Abramzon and W. A. Sirignano, ``Droplet vaporization model for spray combustion calculations,'' Int. J. Heat Mass Transfer \textbf{32}, 1605--1618 (1989).
+
+\bibitem{Rosin1933} P. Rosin and E. Rammler, ``The laws governing the fineness of powdered coal,'' J. Inst. Fuel \textbf{7}, 29--36 (1933).
+
+\bibitem{Cantera} D. G. Goodwin, H. K. Moffat, I. Schoegl, R. L. Speth, and B. W. Weber, ``Cantera: An object-oriented software toolkit for chemical kinetics, thermodynamics, and transport processes,'' Version 3.2.0, \url{https://doi.org/10.5281/zenodo.17620923} (2025).
+
+\bibitem{Guo2023pci} H. Guo, Y. Xu, H. Zheng, and H. Zhang, ``Ignition limit and shock-to-detonation transition mode of n-heptane/air mixture in high-speed wedge flows,'' Proc. Combust. Inst. \textbf{39}, 4771--4780 (2023).
+
+\bibitem{Elghobashi1994} S. Elghobashi, ``On predicting particle-laden turbulent flows,'' Appl. Sci. Res. \textbf{52}, 309--329 (1994).
+
+\bibitem{NIST} P. J. Linstrom and W. G. Mallard (Eds.), \textit{NIST Chemistry WebBook, NIST Standard Reference Database 69} (National Institute of Standards and Technology, Gaithersburg, MD), \url{https://doi.org/10.18434/T4D303} (accessed 2026).
+
+\bibitem{Spalding1953} D. B. Spalding, ``The combustion of liquid fuels,'' Symp. (Int.) Combust. \textbf{4}, 847--864 (1953).
+
+\bibitem{Johari2006} H. Johari, ``Scaling of fully pulsed jets in crossflow,'' AIAA J. \textbf{44}, 2719--2725 (2006).
+
+\bibitem{Sau2010} R. Sau and K. Mahesh, ``Optimization of pulsed jets in crossflow,'' J. Fluid Mech. \textbf{653}, 365--390 (2010).
+
+\bibitem{Karagozian2010} A. R. Karagozian, ``Transverse jets and their control,'' Prog. Energy Combust. Sci. \textbf{36}, 531--553 (2010).
+
+\bibitem{Cutler2001} A. D. Cutler, G. C. Harding, and G. S. Diskin, ``High frequency supersonic pulsed injection,'' AIAA Paper 2001-0517 (2001).
+
+\bibitem{Lovett2008} J. A. Lovett, K. A. Teerlinck, and J. M. Cohen, ``Demonstration of active combustion control,'' NASA Contractor Report NASA/CR-2008-215491 (NASA Glenn Research Center, Cleveland, OH, 2008).
+
+\bibitem{Zenodo2026} Y. Senthilkumar, ``pulswave: Code and data for liquid-jet-anchored oblique detonation under jet interruption, pulsing and throttling,'' Zenodo, \url{https://doi.org/10.5281/zenodo.23676003} (2026).
+
+\bibitem{Zenodo2026fields} Y. Senthilkumar, ``pulswave simulation fields and containers: liquid-jet-anchored oblique detonation under jet interruption, pulsing and throttling,'' Zenodo, \url{https://doi.org/10.5281/zenodo.23676091} (2026).
+
+\end{thebibliography}
+
+\end{document}

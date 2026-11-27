@@ -1,0 +1,11 @@
+--- a/detonationFoam_dev/solverTypeNSSpray_Sutherland/rhoYEqn_NSSpray_Sutherland.H
++++ b/detonationFoam_dev/solverTypeNSSpray_Sutherland/rhoYEqn_NSSpray_Sutherland.H
+@@ -4,7 +4,7 @@
+     (
+         mesh,
+         fields,
+-        phi,
++        rhoPhi,
+         mesh.divScheme("div(rhoPhi,Yi_h)")
+     )
+ );

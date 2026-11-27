@@ -1,6 +1,6 @@
 # Campaign scripts
 
-How the second-instance runs (Oct 2026) were built and launched. Cases live in `$BOXES` (default `~/PULSWAVE/cases/boxes`).
+How the second-instance runs (Oct 2026) and the revision runs (Nov 2026) were built and launched. Cases live in `$BOXES` (default `~/PULSWAVE/cases/boxes`).
 
 | Script | Does |
 |---|---|
@@ -8,5 +8,8 @@ How the second-instance runs (Oct 2026) were built and launched. Cases live in `
 | `build_mapped.py <case>...` | Cases on a new mesh (0.1 mm crop, patch half-width): builds the mesh, maps the parent state with mapFields, carries the injector state over |
 | `audit.py <case>` | Checks a built case before launch: injector names and saved state, parcel rates, decomposition |
 | `queue.sh <case>...` | Launches the cases in order as cores free up, dropping any that fail the audit |
+| `build_revision.py <job>...` | Revision runs on the patched solver: branches (`JOBS`), and cases on a new mesh or from a clean start (`SPECIAL`: 0.1 mm crop, 0.15 mm and 120 × 25 mm reduced domains, full domain, patch half-width) |
+| `revision_settings.py <case>` | Sets the revision's ODE tolerances, ascii output and save interval in a case and records them in `revision.json` |
+| `queue_rev.py` | Unattended queue for the revision runs in `queue_rev.json`: builds each job when its parent save exists, launches in strict priority order as cores free, audits before launch, and logs crashes. Cancel with `touch ~/queue.cancel` |
 
 `crop_off_np1` was changed by hand after `build_new.py`: its first build overflowed the injector's int32 parcel rate (a floating-point exception at startup), so the jet was split into two injectors (`jet0`, `jet0b`, each `parcelsPerSecond` 1.442e9) and the freestream injectors run at 3x parcels with `nParticle` 3.333333. Cases from before this campaign were built with `python -m pulswave branch`. Each case's exact settings are in its archived `setup.json` and `constant/sprayCloudProperties`.

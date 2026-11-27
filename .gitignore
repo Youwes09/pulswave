@@ -17,3 +17,5 @@ paper/manuscript.pdf
 paper/*.aux
 paper/*.log
 paper/submission.zip
+paper/manuscriptv2.pdf
+.notes/

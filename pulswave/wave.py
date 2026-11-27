@@ -17,9 +17,10 @@ def _cells(dx):
     return lambda k: max(1, round(k * 0.2e-3 / dx))
 
 
-def structure(rows, heights_mm=(1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 22, 26, 30, 34, 38), x0=0.035, x1=0.14, dx=0.2e-3, rise=1.5):
-    """Per height: the first shock (pressure rising by `rise` over four cells) with burnt gas (CO + CO2 > 0.02) within five
-    cells behind it, as (y mm, x mm, pressure ratio, shock-to-burnt gap mm); x is None where no reacting front is found."""
+def structure(rows, heights_mm=(1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 22, 26, 30, 34, 38), x0=0.035, x1=0.14, dx=0.2e-3, rise=1.5,
+              burnt_min=0.02):
+    """Per height: the first shock (pressure rising by `rise` over four cells) with burnt gas (CO + CO2 > `burnt_min`) within
+    five cells behind it, as (y mm, x mm, pressure ratio, shock-to-burnt gap mm); x is None where no reacting front is found."""
     rows_y = _by_row(rows, "y", dx)
     n = _cells(dx)
     out = []
@@ -28,7 +29,7 @@ def structure(rows, heights_mm=(1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 22, 26, 30, 34,
         if len(line) < 3:
             out.append((h, None, None, None))
             continue
-        burnt = [r["CO2"] + r["CO"] > 0.02 for r in line]
+        burnt = [r["CO2"] + r["CO"] > burnt_min for r in line]
         j = next((i for i in range(n(4), len(line))
                   if line[i]["p"] >= rise * line[i - n(4)]["p"] and any(burnt[i - n(2):i + n(5)])), None)
         if j is None:
@@ -37,6 +38,17 @@ def structure(rows, heights_mm=(1, 2, 3, 4, 5, 6, 9, 12, 15, 18, 22, 26, 30, 34,
         ratio = max(r["p"] for r in line[j:j + n(10)]) / line[max(j - n(4), 0)]["p"]
         b = next((k for k in range(j - n(2), len(line)) if burnt[k]), None)
         out.append((h, line[j]["x"] * 1e3, ratio, None if b is None else (line[b]["x"] - line[j]["x"]) * 1e3))
+    return out
+
+
+def front_T(rows, T_min, heights_mm=(4, 5, 6), x0=0.035, x1=0.14, dx=0.2e-3):
+    """Temperature-based front, independent of pressure and species: per height, the first cell moving downstream with
+    T above T_min, as (y mm, x mm)."""
+    rows_y = _by_row(rows, "y", dx)
+    out = []
+    for h in heights_mm:
+        line = sorted((r for r in rows_y[int(h * 1e-3 / dx + 1e-6)] if x0 < r["x"] < x1), key=lambda r: r["x"])
+        out.append((h, next((r["x"] * 1e3 for r in line if r["T"] > T_min), None)))
     return out
 
 

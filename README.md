@@ -6,16 +6,16 @@ Two-dimensional Eulerian-Lagrangian study of an n-heptane spray oblique detonati
 
 | Path | Contents |
 |---|---|
-| `container/` | Apptainer definitions for OpenFOAM-8 and detonationFoam, with every source commit pinned |
+| `container/` | Apptainer definitions for OpenFOAM-8 and detonationFoam, with every source commit pinned, and the solver patch used for the revision (`patches/`) |
 | `mechanisms/` | n-heptane chemistry: the Chemkin inputs and the Cantera YAML |
 | `template/` | Static OpenFOAM dictionaries shared by every case |
 | `pulswave/` | Python package: case builder, analysis and theory checks (`python -m pulswave`) |
 | `scripts/run.sh` | Meshes, decomposes and launches a case |
 | `scripts/campaign/` | Builds and queues the switch-off, pulsing and equal-fuel runs |
 | `scripts/analysis/` | Extractions, the claims ledger (`claims.py`) and the performance scripts behind the numbers in the manuscript |
-| `scripts/checks/` | One-off checks behind statements in the docs (tracker comparison, total pressure against Cantera) |
+| `scripts/checks/` | Checks behind statements in the docs and the manuscript: threshold sensitivity, manuscript consistency, tracker comparison, total pressure against Cantera |
 | `docs/` | Research context, reproduction steps, validation record and tool reference |
-| `paper/` | Manuscript (`manuscript.tex`), its figures, the data behind them (`data/`) and the script that plots them (`figures.py`) |
+| `paper/` | Submitted manuscript (`manuscript.tex`) and its revision (`manuscriptv2.tex`), their figures (`figures/`, `figures_v2/`), the data behind them (`data/`) and the scripts that plot them (`figures.py`, `figures_v2.py`) |
 | `resources/` | Source papers (not tracked) |
 | `cases/` | Generated cases (not tracked) |
 
@@ -39,7 +39,7 @@ Figures: `python paper/figures.py` plots `paper/data` into `paper/figures`; `pyt
 - [docs/assumptions.md](docs/assumptions.md): input values the papers do not state
 - [docs/solver.md](docs/solver.md): solver internals and known pitfalls
 - [docs/status.md](docs/status.md): current state and next steps
-- [docs/experiments.md](docs/experiments.md): the jet-off, pulsed-jet and grid-check experiments and their results
+- [docs/experiments.md](docs/experiments.md): the jet-off, pulsed-jet, grid-check and revision experiments, their analysis criteria and results
 - [docs/references.md](docs/references.md): every paper and code this work uses
 - [docs/case-spec-open-wedge.md](docs/case-spec-open-wedge.md), [docs/case-spec-confined.md](docs/case-spec-confined.md): the two baseline papers' specifications
 
