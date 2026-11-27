@@ -7,6 +7,7 @@ One-off checks behind statements in the docs and the manuscript.
 | `check_tex.py <tex>` | Manuscript source: every citation defined and cited in order, bibliography order (`--fix-order` re-sorts it), labels and references, figure order, and known-error strings |
 | `sensitivity.py [paper/data]` | Holds, retreat speeds, offsets and drift for five base definitions and hold thresholds of 1.25–2.5 cells |
 | `tracker_sensitivity.py <case>...` | Front positions for every tracker variant: pressure factor 1.3 / 1.5 / 2.0, burnt-gas cutoff 0.01 / 0.02 / 0.05, temperature fronts at 1500 and 1900 K |
+| `classify.py [tracker_dir] [--json out]` | Outcome class (held / lost / intermediate) of each revision run under every combination of tracker variant, base definition and drift window; hold intervals after switch-off; crop offsets within 40 µs |
 | `settled.py <case> <t0> <t1> [tol]` | Whether the base has varied by at most one cell over a time window: the branching criterion for mapped runs, used as a queue gate |
 | `tracker_compare.py <case>...` | Base per height with the earlier tracker (largest pressure rise) against the current one, every save from 70 µs |
 | `total_pressure_cantera.py <case> <t> <x,y>...` | Cell total pressure from `pulswave.performance` against Cantera (isentropic, frozen composition) |

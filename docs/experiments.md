@@ -570,6 +570,9 @@ The cases are built by `scripts/campaign/build_revision.py` and run by `scripts/
 | `r_box_f50k`, `r_box_f60k` | Threshold frequency at 50% duty, in the domain used for long-time outcomes |
 | `r_box_q120k` | Duty-cycle result (50% against 25% at an off-time of 6.25 µs) in the reduced domain |
 | `r_box_f80k_ext`, `r_box_ref_ext` | 80 kHz and reference to 350 µs |
+| `r_box_f80k_p71`, `r_box_f80k_p73` | 80 kHz with pulsing started 1 and 3 µs later, from the reference's saves: does the late outcome depend on the start? |
+| `r_box_f20k_ext`, `r_box_f30k_ext`, `r_box_f20k_p75` | 20 and 30 kHz to 350 µs, and 20 kHz started 5 µs later: does the recapture stay bounded? |
+| `r_box_f10k` | 10 kHz to 300 µs: an off-time of 50 µs, more than three times the hold |
 | `r_crop_*` (switch-off, 50% / 37.5% / 25% duty, plug removed, 1 mm jet, wall treatments) | Crop cases on the patched solver, within the crop's window (below) |
 | `r_crop_*_co15` | Courant number 0.15 against 0.3 |
 | `r_crop_off_tolctl` | Default ODE tolerances over the hold |
@@ -640,11 +643,51 @@ The tools are `scripts/checks/tracker_sensitivity.py` and `scripts/checks/sensit
 | Crop, continuous | 51.9 | 51.9 | 51.5 | 51.7 | 51.3 |
 | Crop, 80 kHz | 52.5 | 52.9 | 53.1 | 54.3 | 55.7 |
 
-  The two domains agree within 0.6 mm up to +40 µs. After +50 µs the crop 80 kHz base retreats at about the jet-off rate, while the reduced-domain base holds. The 50 and 60 kHz crop runs retreat in the same way. In the crop, the front reaches the top boundary (y = 25 mm), which imposes the freestream inflow, at x ≈ 77 mm. In the reduced domain the front leaves through the outlet.
+  The two domains agree within 0.6 mm up to +40 µs. After +50 µs the crop 80 kHz base retreats at about the jet-off rate, while the reduced-domain base holds until +85 µs (it is lost later; see the classes at 200 µs below). The 50 and 60 kHz crop runs retreat in the same way. In the crop, the front reaches the top boundary (y = 25 mm), which imposes the freestream inflow, at x ≈ 77 mm. In the reduced domain the front leaves through the outlet.
 - **Top outflow (not used):** a crop whose top boundary became zero-gradient downstream of x = 72 mm (per-face `mixed` condition) was tried for 80 kHz and jet off. Both failed numerically within 7 µs, with the time step falling to about 1e-15 s, because the flow there still enters the domain.
 - **Mapped states at 70 µs:**
   - `r_low_cont` reproduces the reduced domain's front at every height up to 22 mm, along with its peak CO and temperature.
   - `r_f15box_cont` carries all 70,355 parcels and 2804.2 µg of liquid, and its front lies within 0.3 mm of the 0.2 mm front.
+
+- **Tolerances: accepted.** `r_crop_off_tolctl` gives the same base as the production run at every 1 µs save over 50–70 µs.
+- **Hold after switch-off**, relative to the reference, at a threshold of 1.5 cells: 14–15 µs in the reduced domain (8–17 µs over all tracker variants and base definitions), 11–12 µs in the crop (9–14 µs).
+
+### Classes at 200 µs, reduced domain (2026-11-27)
+
+From `scripts/checks/classify.py` over 105 combinations (7 tracker variants × 5 base definitions × 3 drift windows). Offset against `r_box_ref`; baseline values are for the paper's settings.
+
+| Run | Class (combinations) | Largest \|offset\| (mm) | Final offset (mm) | Drift (mm/µs) |
+|---|---|---|---|---|
+| J = 0.5, steady | held (96), intermediate (9) | 1.8 | +1.4 | +0.002 ± 0.001 |
+| 20 kHz | intermediate (105) | 3.2 | +1.2 | −0.025 ± 0.005 |
+| 30 kHz | intermediate (103), lost (2) | 3.2 | +1.0 | −0.017 ± 0.003 |
+| Jet on again at 95 µs | intermediate (105) | 3.4 | +0.6 | −0.009 ± 0.001 |
+| Half width, cone | intermediate (60), held (42), lost (3) | 2.6 | +2.4 | +0.004 ± 0.001 |
+| 40 kHz | lost (105) | 6.4 | +6.2 | +0.063 ± 0.003 |
+| 80 kHz | lost (103), intermediate (2) | 5.6 | +5.4 | +0.092 ± 0.002 |
+| Jet off | lost (98), intermediate (7) | 9.0 | +8.8 | +0.073 ± 0.002 |
+| J = 0.25, steady | lost (105) | 17.6 | +17.6 | +0.139 ± 0.001 |
+| Dry (to 130 µs) | lost (104), intermediate (1) | 14.4 | +14.4 | +0.272 ± 0.001 |
+
+- **80 kHz:** the base stays within about 1 mm of the reference until 155 µs, then retreats at 0.09 mm/µs at every height from 4 to 9 mm. The original-solver run (`large_f80k_200`) held to 200 µs (51.9 against 51.3 mm).
+- **What precedes the retreat** (`scripts/analysis/mechanism.py`): with the 80 kHz jet the liquid behind the jet stays at 300–460 µg (1250 µg with the continuous jet) and the gas there at Mach 0.7–0.9 (0.28). Near-wall heat release (8 MW/m with the continuous jet) falls from 5.9 MW/m at 130 µs to 3.4 MW/m at 150 µs and to zero by 170 µs, and the jet-shock pressure ratio from about 7 to about 2. The steady retreat starts at 155 µs. At 40 kHz the heat release falls below 4 MW/m from 130 µs and the steady retreat starts at about 140 µs.
+- **20 and 30 kHz:** near-wall burning goes out during the off-time and relights in the next 25 µs (20 kHz) or 17 µs (30 kHz) pulse, when the liquid behind the jet rebuilds to about 850 µg (20 kHz), and the base returns.
+- `r_box_f60k` is 6.0 mm behind at 154 µs; `r_box_f50k`, `r_box_q120k` and `r_box_patch` are running.
+
+### Expected outcomes of the runs added on 2026-11-27
+
+Fixed before these runs started, after the classes above were known. The classes and criteria above apply unchanged.
+
+- **80 kHz with a later start** (`r_box_f80k_p71`, `r_box_f80k_p73`):
+  - both lost: 80 kHz at 50% duty is reported as lost on the patched solver, after a hold of about 85 µs.
+  - one or both not lost: the late 80 kHz outcome is reported as dependent on the start, with the count of runs in each class.
+- **Recapture at 20 and 30 kHz** (`r_box_f20k_ext`, `r_box_f30k_ext`, `r_box_f20k_p75`). The manuscript states that these frequencies keep the base without net drift only if, in all three runs over 200–350 µs:
+  - the drift over 300–350 µs is below 0.02 mm/µs or not different from zero at two standard errors, and
+  - the largest offset is at most one cell (0.2 mm) above the largest offset over 70–200 µs of the same frequency.
+
+  Otherwise the class and the drift are reported as they are.
+- **10 kHz** (`r_box_f10k`): expected intermediate, the base retreating by roughly 3 mm in each 50 µs off-time and returning in each on-time. If it is lost, the longest off-time that recaptures lies between 25 and 50 µs.
+- **Liquid and near-wall burning** (hypothesis from the runs above, tested on these runs): in every run that is lost, near-wall heat release (x = 49.5–60 mm, y < 3 mm) has fallen below 4 MW/m, half its continuous-jet value, when the steady retreat starts, and does not recover above it; in every recapture, it recovers above 4 MW/m within the same jet pulse. A run that contradicts either is reported, and the hypothesis is then stated as not general.
 
 Changes to the criteria: none.
 

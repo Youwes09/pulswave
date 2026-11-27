@@ -68,6 +68,67 @@
   ]
  },
  {
+  "name": "r_box_f80k_p71",
+  "ranks": 8,
+  "needs": [
+   "r_box_ref",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f80k_p73",
+  "ranks": 8,
+  "needs": [
+   "r_box_ref",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f20k_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_f20k",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f30k_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_f30k",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f80k_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_f80k",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_ref_ext",
+  "ranks": 8,
+  "needs": [
+   "r_box_ref",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f20k_p75",
+  "ranks": 8,
+  "needs": [
+   "r_box_ref",
+   "End"
+  ]
+ },
+ {
+  "name": "r_box_f10k",
+  "ranks": 8,
+  "needs": null
+ },
+ {
   "name": "r_box_f50k",
   "ranks": 8,
   "needs": null
@@ -194,22 +255,6 @@
   "needs": [
    "r_box_ref",
    "0.000166"
-  ]
- },
- {
-  "name": "r_box_f80k_ext",
-  "ranks": 8,
-  "needs": [
-   "r_box_f80k",
-   "End"
-  ]
- },
- {
-  "name": "r_box_ref_ext",
-  "ranks": 8,
-  "needs": [
-   "r_box_ref",
-   "End"
   ]
  }
 ]
